@@ -1,4 +1,4 @@
-const CACHE = 'mtg-collection-v2';
+const CACHE = 'mtg-collection-v3';
 const APP_SHELL = ['./', './index.html', './manifest.json', './service-worker.js'];
 
 self.addEventListener('install', event => {
