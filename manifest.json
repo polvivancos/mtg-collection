@@ -1,13 +1,1 @@
-{
-  "name": "MTG Collection",
-  "short_name": "MTG Collection",
-  "description": "Inventari personal de cartes de Magic: The Gathering",
-  "start_url": "./",
-  "scope": "./",
-  "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#0c0d10",
-  "theme_color": "#0c0d10",
-  "lang": "ca",
-  "categories": ["games", "utilities"]
-}
+{"name":"MTG Collection Pro","short_name":"MTG Collection","description":"Inventari professional de cartes de Magic: The Gathering","start_url":"./","scope":"./","display":"standalone","orientation":"portrait","background_color":"#0c0d10","theme_color":"#0c0d10","lang":"ca"}
