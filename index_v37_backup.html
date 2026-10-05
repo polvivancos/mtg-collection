@@ -134,60 +134,6 @@ initCloud();
 // Scryfall + local scanner (0 €): multi-zone OCR + collector-number matching
 let stream=null,currentPrinting=null;const scanner=$('scannerModal'),camera=$('camera'),canvas=$('canvas');
 async function loadTesseract(){if(window.Tesseract)return window.Tesseract;return new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';s.onload=()=>res(window.Tesseract);s.onerror=rej;document.head.appendChild(s)})}
-let visualExtractor=null;
-const VISUAL_MODEL_ID='Xenova/mobileclip_s0';
-const VISUAL_CACHE_KEY='mtgVisualEmbeddingsV1';
-async function loadVisualModel(){
-  if(visualExtractor)return visualExtractor;
-  if(window.__visualLoading)return window.__visualLoading;
-  window.__visualLoading=(async()=>{
-    const s=document.createElement('script');
-    s.type='module';
-    s.textContent=`import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/+esm'; window.__hfPipeline=pipeline;`;
-    document.head.appendChild(s);
-    const started=Date.now();
-    while(!window.__hfPipeline && Date.now()-started<20000) await new Promise(r=>setTimeout(r,100));
-    if(!window.__hfPipeline)throw new Error('No s’ha pogut carregar Transformers.js');
-    visualExtractor=await window.__hfPipeline('image-feature-extraction',VISUAL_MODEL_ID,{dtype:'q8'});
-    return visualExtractor;
-  })();
-  try{return await window.__visualLoading}catch(e){window.__visualLoading=null;throw e}
-}
-function visualCacheRead(){try{return JSON.parse(localStorage.getItem(VISUAL_CACHE_KEY)||'{}')}catch(e){return {}}}
-function visualCacheWrite(cache){try{const keys=Object.keys(cache);if(keys.length>120)keys.slice(0,keys.length-120).forEach(k=>delete cache[k]);localStorage.setItem(VISUAL_CACHE_KEY,JSON.stringify(cache))}catch(e){}}
-function tensorVector(x){return Array.from(x?.data||x||[])}
-function cosine(a,b){let dot=0,na=0,nb=0;const n=Math.min(a.length,b.length);for(let i=0;i<n;i++){dot+=a[i]*b[i];na+=a[i]*a[i];nb+=b[i]*b[i]}return dot/(Math.sqrt(na)*Math.sqrt(nb)||1)}
-async function imageToDataUrl(blobOrCanvas){return new Promise((res,rej)=>{if(blobOrCanvas instanceof HTMLCanvasElement){try{res(blobOrCanvas.toDataURL('image/jpeg',.9))}catch(e){rej(e)}return}const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(blobOrCanvas)})}
-async function prepareVisualProbe(blob){
-  const bmp=await createImageBitmap(blob), w=bmp.width,h=bmp.height;
-  // MTG cards are portrait 5:7. Crop the centre so the model sees the card, not the table/background.
-  const target=5/7;let cw=w,ch=Math.round(w/target);if(ch>h){ch=h;cw=Math.round(h*target)}
-  const sx=Math.max(0,Math.round((w-cw)/2)),sy=Math.max(0,Math.round((h-ch)/2));
-  const c=document.createElement('canvas');c.width=512;c.height=717;c.getContext('2d').drawImage(bmp,sx,sy,cw,ch,0,0,c.width,c.height);
-  return c;
-}
-async function visualRerank(blob,candidates,statusEl){
-  if(!candidates.length)return candidates;
-  try{
-    statusEl.textContent='🧠 Analitzant visualment la carta…';
-    const model=await loadVisualModel();
-    const probeCanvas=await prepareVisualProbe(blob);
-    const probe=tensorVector(await model(await imageToDataUrl(probeCanvas),{pooling:'mean',normalize:true}));
-    const cache=visualCacheRead(), ranked=[];
-    for(let i=0;i<candidates.length;i++){
-      const x=candidates[i];const c=x.c;let ev=null;const key=c.id;
-      if(cache[key]?.embedding)ev=cache[key].embedding;
-      if(!ev){const img=c.image_uris?.normal||c.card_faces?.[0]?.image_uris?.normal;if(img){try{ev=tensorVector(await model(img,{pooling:'mean',normalize:true}));cache[key]={embedding:ev,name:c.name,image:img,at:Date.now()}}catch(e){}}}
-      const visual=ev?cosine(probe,ev):0;
-      // OCR remains useful, but image evidence gets the larger weight.
-      const total=x.score*.35+visual*.65;
-      ranked.push({...x,visual,total});
-      statusEl.textContent=`🧠 Comparant imatge · ${i+1}/${candidates.length}…`;
-    }
-    visualCacheWrite(cache);
-    return ranked.sort((a,b)=>b.total-a.total);
-  }catch(e){console.warn('Visual model unavailable',e);return candidates.map(x=>({...x,visual:null,total:x.score})).sort((a,b)=>b.total-a.total)}
-}
 async function startCam(video){const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1440}},audio:false});video.srcObject=s;return s}
 function stop(s,video){if(s)s.getTracks().forEach(t=>t.stop());if(video)video.srcObject=null}
 function cleanOCR(t){return t.replace(/[^\p{L}\p{N}\s#./-]/gu,' ').replace(/\s+/g,' ').trim()}
@@ -200,80 +146,37 @@ function parseCollector(text){const raw=text.toUpperCase().replace(/\n/g,' ');co
   return [...new Map(out.map(x=>[x.set+'|'+x.number,x])).values()].slice(0,8)
 }
 async function ocrImage(T,canvas,mode){
-  const r=await T.recognize(canvas,'eng',{logger:()=>{},config:{tessedit_pageseg_mode:String(mode||6),preserve_interword_spaces:'1'}});return r.data.text||''
+  const r=await T.recognize(canvas,'eng',{logger:()=>{},config:{tessedit_pageseg_mode:mode||6}});return r.data.text||''
 }
-async function preprocessCrop(bmp,sx,sy,sw,sh,scale=3,contrast=false,threshold=false){
-  const c=document.createElement('canvas');c.width=Math.max(1,Math.round(sw*scale));c.height=Math.max(1,Math.round(sh*scale));
-  const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingEnabled=true;x.drawImage(bmp,sx,sy,sw,sh,0,0,c.width,c.height);
-  if(contrast||threshold){const d=x.getImageData(0,0,c.width,c.height),a=d.data;for(let i=0;i<a.length;i+=4){let g=.299*a[i]+.587*a[i+1]+.114*a[i+2];if(contrast)g=g<128?Math.max(0,g-35):Math.min(255,g+35);if(threshold)g=g>150?255:0;a[i]=a[i+1]=a[i+2]=g}x.putImageData(d,0,0)}return c
-}
-function normalizeOCRName(t){return cleanOCR(t).replace(/^[^\p{L}]+/u,'').replace(/[^\p{L}\p{N}'’&,:.\-\s]/gu,' ').replace(/\s+/g,' ').trim()}
-function plausibleName(t){const x=normalizeOCRName(t);if(x.length<3||x.length>60)return false;if(/^magic( the)? gathering$/i.test(x))return false;if(/^\d+[\s#/-]*\d*$/i.test(x))return false;return /[\p{L}]/u.test(x)}
-function titleCandidates(lines){
-  const out=[];for(const x of lines){const n=normalizeOCRName(x);if(plausibleName(n))out.push(n)}
-  return [...new Set(out)].sort((a,b)=>{const sa=(b.match(/[A-Z]/g)||[]).length-(a.match(/[A-Z]/g)||[]).length;return sa||b.length-a.length}).slice(0,18)
-}
-function levenshtein(a,b){a=a.toLowerCase();b=b.toLowerCase();const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=Array.from({length:n+1},(_,i)=>i),q=new Array(n+1);for(let i=1;i<=m;i++){q[0]=i;for(let j=1;j<=n;j++)q[j]=Math.min(q[j-1]+1,p[j]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));[p,q]=[q,p]}return p[n]}
-function nameSimilarity(a,b){a=normalizeOCRName(a).toLowerCase();b=normalizeOCRName(b).toLowerCase();if(!a||!b)return 0;const d=levenshtein(a,b),base=Math.max(a.length,b.length);let s=1-d/base;const aw=a.split(/\s+/),bw=b.split(/\s+/);let hits=0;for(const w of aw)if(w.length>2&&bw.some(x=>x===w||x.includes(w)||w.includes(x)))hits++;if(aw.length) s+=Math.min(.18,hits/aw.length*.18);return Math.max(0,Math.min(1,s))}
-function buildNameQueries(lines){const cleaned=lines.map(normalizeOCRName).filter(plausibleName);const q=[];for(let i=0;i<cleaned.length;i++){q.push(cleaned[i]);if(i+1<cleaned.length){const joined=(cleaned[i]+' '+cleaned[i+1]).trim();if(joined.length<=70)q.push(joined)}}return [...new Set(q)].sort((a,b)=>b.length-a.length).slice(0,28)}
-async function identifyByName(lines,statusEl,resultsEl){
-  const queries=buildNameQueries(lines), pool=new Map();
-  for(let i=0;i<queries.length;i++){
-    const line=queries[i];statusEl.textContent=`🔎 Contrastant nom ${i+1}/${queries.length}…`;
-    try{
-      const ar=await fetch('https://api.scryfall.com/cards/autocomplete?q='+encodeURIComponent(line),{headers:{Accept:'application/json'}});
-      if(ar.ok){const ad=await ar.json();for(const name of (ad.data||[]).slice(0,12)){const score=nameSimilarity(line,name);const prev=pool.get(name);if(!prev||score>prev.score)pool.set(name,{name,score,line})}}
-    }catch(e){}
-    if(i<queries.length-1)await new Promise(r=>setTimeout(r,70));
-  }
-  const ranked=[...pool.values()].sort((a,b)=>b.score-a.score).slice(0,10);const matches=[];
-  for(const item of ranked){
-    try{let r=await fetch('https://api.scryfall.com/cards/named?exact='+encodeURIComponent(item.name),{headers:{Accept:'application/json'}});if(!r.ok)r=await fetch('https://api.scryfall.com/cards/named?fuzzy='+encodeURIComponent(item.line),{headers:{Accept:'application/json'}});if(r.ok){const c=await r.json();matches.push({c,line:item.line,score:Math.max(item.score,nameSimilarity(item.line,c.name))})}}catch(e){}
-    if(matches.length>=10)break
-  }
-  return matches.sort((a,b)=>b.score-a.score)
+async function preprocessCrop(bmp,sx,sy,sw,sh,scale=3,contrast=false){
+  const c=document.createElement('canvas');c.width=Math.round(sw*scale);c.height=Math.round(sh*scale);const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingEnabled=true;x.drawImage(bmp,sx,sy,sw,sh,0,0,c.width,c.height);
+  if(contrast){const d=x.getImageData(0,0,c.width,c.height),a=d.data;for(let i=0;i<a.length;i+=4){let g=.299*a[i]+.587*a[i+1]+.114*a[i+2];g=g<128?Math.max(0,g-25):Math.min(255,g+25);a[i]=a[i+1]=a[i+2]=g}x.putImageData(d,0,0)}return c
 }
 async function identify(blob,statusEl,resultsEl){
  try{
-  const scanner=resultsEl.closest('.scanner');if(resultsEl.id==='scanResults'&&scanner)scanner.classList.add('has-results');
+  const scanner=resultsEl.closest('.scanner');
+  if(resultsEl.id==='scanResults' && scanner) scanner.classList.add('has-results');
   statusEl.textContent='📷 Preparant la imatge…';resultsEl.innerHTML='';const T=await loadTesseract();const bmp=await createImageBitmap(blob);const w=bmp.width,h=bmp.height;
-  // Ensemble OCR: several title crops, preprocessing variants and page segmentation modes.
+  // Name zone + collector/set zone + wider fallbacks. This is deliberately local: no paid AI/API.
   const crops=[
-   ['title-a',await preprocessCrop(bmp,0,h*.005,w,h*.145,4,false,false)],
-   ['title-b',await preprocessCrop(bmp,0,h*.01,w,h*.19,4,false,false)],
-   ['title-c',await preprocessCrop(bmp,w*.025,h*.005,w*.95,h*.17,4,true,false)],
-   ['title-d',await preprocessCrop(bmp,w*.04,h*.015,w*.92,h*.15,5,false,true)],
-   ['title-e',await preprocessCrop(bmp,0,h*.02,w,h*.24,3,false,false)],
-   ['collector-left',await preprocessCrop(bmp,w*.02,h*.82,w*.72,h*.18,5,true,false)],
-   ['collector-bottom',await preprocessCrop(bmp,0,h*.78,w,h*.22,4,true,false)],
-   ['full-top',await preprocessCrop(bmp,0,0,w,h*.34,2.5,false,false)]
+   ['nom',await preprocessCrop(bmp,0,h*.015,w,h*.19,3,false)],
+   ['nom-contrast',await preprocessCrop(bmp,0,h*.01,w,h*.24,3,true)],
+   ['collector',await preprocessCrop(bmp,0,h*.82,w,h*.18,4,false)],
+   ['collector-contrast',await preprocessCrop(bmp,0,h*.78,w,h*.22,4,true)],
+   ['franja-superior',await preprocessCrop(bmp,w*.03,0,w*.94,h*.34,2.6,false)]
   ];
   let nameLines=[],collectorHits=[];
-  const modes=[7,6,11];
-  for(let i=0;i<crops.length;i++){
-    statusEl.textContent=`📝 Lectura intel·ligent ${i+1}/${crops.length}…`;const [kind,c]=crops[i];
-    for(const mode of (kind.startsWith('title')?[7,11]:[6,11])){
-      const text=await ocrImage(T,c,mode);const cleaned=text.split(/\n+/).map(cleanOCR).filter(x=>x.length>=2&&x.length<80);
-      if(kind.startsWith('title')||kind==='full-top')nameLines.push(...cleaned);collectorHits.push(...parseCollector(text));
-    }
-  }
+  for(let i=0;i<crops.length;i++){statusEl.textContent=`📝 Lectura local ${i+1}/${crops.length}…`;const [kind,c]=crops[i];const text=await ocrImage(T,c,6);const cleaned=text.split(/\n+/).map(cleanOCR).filter(x=>x.length>=2&&x.length<80);if(kind.startsWith('nom')||kind==='franja-superior')nameLines.push(...cleaned);collectorHits.push(...parseCollector(text))}
   const collectors=[...new Map(collectorHits.map(x=>[x.set+'|'+x.number,x])).values()];
-  // Collector number/set is the strongest signal when both are readable.
+  // Try exact printing when a set code + collector number was recovered.
   for(const hit of collectors){try{const r=await fetch(`https://api.scryfall.com/cards/${encodeURIComponent(hit.set)}/${encodeURIComponent(hit.number)}`,{headers:{Accept:'application/json'}});if(r.ok){const c=await r.json();statusEl.textContent=`🎯 Impressió exacta detectada · ${c.set_name} #${c.collector_number}`;return showExactLocal(c,hit,statusEl,resultsEl)}}catch(e){}}
-  statusEl.textContent='🔎 Comparant lectures del nom…';
-  const matches=await identifyByName(nameLines,statusEl,resultsEl);const unique=[...new Map(matches.map(x=>[x.c.name,x])).values()];
-  const visuallyRanked=await visualRerank(blob,unique,statusEl);
-  if(!unique.length){
-    resultsEl.innerHTML=`<div class="hint"><b>No he pogut identificar la carta amb prou confiança.</b><br>Prova d’acostar una mica la càmera, evitar reflexos i enquadrar la carta sencera. També pots buscar-la pel nom.</div><div class="toolbar" style="margin-top:8px"><input class="control search" id="manualName" placeholder="Nom de la carta"><button class="primary" id="manualSearch">Cercar</button></div>`;
-    $('manualSearch').onclick=()=>showPrintings($('manualName').value.trim(),statusEl,resultsEl);return
-  }
-  const ranked=visuallyRanked.length?visuallyRanked:unique;const best=ranked[0]?.total??ranked[0]?.score??0;
-  if(ranked.length>1 || best<0.92){
-    statusEl.textContent='🎴 He comparat text + imatge. Tria la carta correcta:';
-    resultsEl.innerHTML='<div class="hint"><b>Identificació assistida per imatge</b><br>La primera vegada pot trigar una mica mentre es descarrega el model visual gratuït (~12 MB). Després queda guardat al navegador.</div><div class="printgrid">'+ranked.map(x=>{const c=x.c,img=c.image_uris?.small||c.card_faces?.[0]?.image_uris?.small||'';const vis=x.visual==null?'':` · visual ${Math.round(x.visual*100)}%`;return `<div class="print"><img src="${esc(img)}"><div class="printbody"><div class="printname">${esc(c.name)}</div><div class="meta">${esc(c.type_line||'')}</div><div class="meta">Text ${Math.round(x.score*100)}%${vis}</div><button class="primary" data-name="${esc(c.name)}">✓ Aquesta carta</button></div></div>`}).join('')+'</div>';
-    resultsEl.querySelectorAll('[data-name]').forEach(b=>b.onclick=()=>showPrintings(b.dataset.name,statusEl,resultsEl));return
-  }
-  await showPrintings(unique[0].c.name,statusEl,resultsEl)
+  // Name fallback: fuzzy lookup for several independent OCR readings, then consolidate candidates.
+  const lines=[...new Set(nameLines)].filter(x=>!/^magic|the gathering|wizards|[0-9]+$/.test(x.toLowerCase())).slice(0,12);const matches=[];
+  for(const line of lines){try{const r=await fetch('https://api.scryfall.com/cards/named?fuzzy='+encodeURIComponent(line),{headers:{Accept:'application/json'}});if(r.ok){const c=await r.json();if(c.name)matches.push(c)}}catch(e){}if(matches.length>=5)break}
+  const byName=new Map();matches.forEach(c=>byName.set(c.name,c));const unique=[...byName.values()];
+  if(!unique.length){resultsEl.innerHTML=`<div class="hint"><b>No he pogut identificar la carta.</b><br>Prova a omplir el marc amb la carta sencera, sense reflexos. El sistema és local i gratuït; si la carta és antiga i no té número de col·leccionista, pots cercar-la manualment.</div><div class="toolbar" style="margin-top:8px"><input class="control search" id="manualName" placeholder="Nom de la carta"><button class="primary" id="manualSearch">Cercar</button></div>`;$('manualSearch').onclick=()=>showPrintings($('manualName').value.trim(),statusEl,resultsEl);return}
+  if(unique.length>1){statusEl.textContent='He trobat diverses possibles cartes. Tria la correcta:';resultsEl.innerHTML='<div class="printgrid">'+unique.map(c=>{const img=c.image_uris?.small||c.card_faces?.[0]?.image_uris?.small||'';return `<div class="print"><img src="${esc(img)}"><div class="printbody"><div class="printname">${esc(c.name)}</div><div class="meta">${esc(c.type_line||'')}</div><button class="primary" data-name="${esc(c.name)}">Veure impressions</button></div></div>`}).join('')+'</div>';resultsEl.querySelectorAll('[data-name]').forEach(b=>b.onclick=()=>showPrintings(b.dataset.name,statusEl,resultsEl));return}
+  await showPrintings(unique[0].name,statusEl,resultsEl);
  }catch(e){console.error(e);statusEl.textContent='No s’ha pogut processar la foto. Prova amb més llum i la carta completament plana.'}
 }
 function renderDetectedCard(c,statusEl,resultsEl,extraHint=''){const img=c.image_uris?.normal||c.card_faces?.[0]?.image_uris?.normal||'';resultsEl.innerHTML=`<div class="hint"><b>🎯 Carta detectada</b><br>${esc(extraHint||'Revisa la carta abans de continuar.')}</div><div class="printgrid"><div class="print"><img src="${esc(img)}"><div class="printbody"><div class="printname">${esc(c.name)}</div><div class="meta">${esc(c.type_line||'')}</div><div class="meta">${esc(c.mana_cost||'')} · ${esc(c.rarity||'')}</div><button class="primary" id="chooseDetected">✓ Seleccionar aquesta carta</button><button id="detectedPrintings">Veure totes les impressions</button></div></div></div>`;$('chooseDetected').onclick=()=>showPrintings(c.name,statusEl,resultsEl);$('detectedPrintings').onclick=()=>showPrintings(c.name,statusEl,resultsEl)}
