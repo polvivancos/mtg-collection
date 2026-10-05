@@ -70,7 +70,7 @@
 </style>
 </head>
 <body><div class="app">
-<header class="top"><div class="topbar"><div class="brand"><div class="logo">MTG</div><div><div class="title">MTG Collection Pro</div><div class="sub">Inventari de col·leccionista · v2.3</div></div></div><div class="actions"><button id="scanBtn">📷 Escanejar</button><button id="inventoryBtn">⚡ Inventari</button><button id="manageTopBtn">🛠 Gestionar cartes</button><button id="cloudBtn">☁️ Núvol</button><button id="exportBtn">Exporta</button><button class="primary" id="addBtn">+ Afegir</button></div></div></header>
+<header class="top"><div class="topbar"><div class="brand"><div class="logo">MTG</div><div><div class="title">MTG Collection Pro</div><div class="sub">Inventari de col·leccionista · v3.13</div></div></div><div class="actions"><button id="scanBtn">📷 Escanejar</button><button id="inventoryBtn">⚡ Inventari</button><button id="manageTopBtn">🛠 Gestionar cartes</button><button id="cloudBtn">☁️ Núvol</button><button id="exportBtn">Exporta</button><button class="primary" id="addBtn">+ Afegir</button></div></div></header>
 <main class="wrap">
 <nav class="tabs"><button class="tab active" data-tab="collection">📚 Col·lecció</button><button class="tab manage-tab" data-tab="manage">🛠 Gestionar cartes</button><button class="tab" data-tab="dashboard">📊 Dashboard</button><button class="tab" data-tab="sets">📦 Sets</button><button class="tab" data-tab="backup">☁️ Dades i núvol</button></nav>
 <section id="collectionTab">
@@ -89,9 +89,9 @@
 <section id="backupTab" class="hide"><div class="panel"><h2>💰 Preus de mercat</h2><p class="sub">El valor actual de les cartes identificades amb Scryfall s’actualitza a partir del preu en euros de la impressió seleccionada. El preu de compra és opcional i no es demana en escanejar.</p><div class="toolbar"><button class="primary" id="refreshPricesBtn">↻ Actualitza preus ara</button><span class="hint" id="priceStatus">L’app actualitza automàticament els preus com a màxim un cop cada 24 hores mentre la fas servir. També pots forçar una actualització manual.</span></div></div><div class="panel"><h2>☁️ Sincronització al núvol</h2><p class="sub">Connecta el teu compte Supabase per tenir la col·lecció sincronitzada entre iPhone, ordinador i altres dispositius.</p><div id="cloudState" class="hint">No connectat.</div><div class="toolbar" style="margin-top:10px"><button id="cloudSettings">⚙️ Configurar</button><button class="primary" id="cloudSync">↕️ Sincronitzar ara</button><button id="cloudLogout">Tancar sessió</button></div></div><div class="panel"><h2>Gestió de dades</h2><p class="sub">Exportació local de seguretat i importació de dades.</p><div class="toolbar"><button id="exportFull">⬇️ Exportar JSON complet</button><button id="exportCsv">⬇️ Exportar CSV</button><button id="importBtn">⬆️ Importar JSON</button><input id="importFile" type="file" accept="application/json" hidden></div><div class="hint">Fes una exportació periòdica. No depenem de Scryfall per conservar la teva col·lecció: les dades que introdueixes són teves.</div></div></section>
 </main></div>
 <div class="modal" id="editModal"><div class="dialog small"><div class="dialoghead"><div><h2 id="editTitle">Afegir carta</h2><div class="sub">Dades de la còpia física</div></div><button data-close="editModal">Tanca</button></div><div class="form"><label>Nom<input id="fName"></label><label>Set / col·lecció<input id="fSet"></label><label>Número de col·leccionista<input id="fNum"></label><label>Color<select id="fColor"><option>Blanc</option><option>Blau</option><option>Negre</option><option>Vermell</option><option>Verd</option><option>Multicolor</option><option>Incolor</option><option>Terreny</option></select></label><label>Cost de manà<input id="fMana"></label><label>Raresa<select id="fRarity"><option>common</option><option>uncommon</option><option>rare</option><option>mythic</option><option>special</option></select></label><label>Quantitat<input id="fQty" type="number" min="1" value="1"></label><label>Acabat<select id="fFoil"><option value="false">Nonfoil</option><option value="true">Foil</option></select></label><label>Idioma<select id="fLang"><option>English</option><option>Spanish</option><option>Japanese</option><option>German</option><option>French</option><option>Italian</option><option>Portuguese</option><option>Korean</option><option>Chinese</option></select></label><label>Estat<select id="fCondition"><option>NM</option><option>EX</option><option>GD</option><option>LP</option><option>MP</option><option>HP</option><option>DMG</option></select></label><label>Preu de compra / còpia (€)<input id="fPurchase" type="number" step="0.01" min="0"></label><label>Valor actual / còpia (€)<input id="fValue" type="number" step="0.01" min="0"></label><label>Ubicació<input id="fLocation" placeholder="Binder Modern, Caixa 1..."></label><label class="wide">Notes<textarea id="fNotes"></textarea></label></div><div class="dialogactions"><button data-close="editModal">Cancel·la</button><button class="primary" id="saveCard">Desa</button></div></div></div>
-<div class="modal" id="scannerModal"><div class="dialog scanner"><div class="dialoghead"><div><h2>Escàner local Pro</h2><div class="sub">Reconeixement local gratuït: nom + número de col·leccionista + codi de set. Després tries la impressió exacta.</div></div><button data-close="scannerModal">Tanca</button></div><div class="camera"><video id="camera" autoplay playsinline muted></video><canvas id="canvas" hidden></canvas><div class="frame"></div></div><div class="hint" id="visionModeHint">🔒 100% local i gratuït: la foto no s’envia a cap IA. El reconeixement combina diverses lectures OCR i intenta identificar directament el número de col·leccionista.</div><div class="scancontrols"><button class="primary" id="captureBtn">📸 Captura</button><button id="galleryBtn">🖼️ Galeria</button><input id="photoInput" type="file" accept="image/*" capture="environment" hidden></div><div id="scanStatus" class="status"></div><div id="scanResults"></div></div></div>
+<div class="modal" id="scannerModal"><div class="dialog scanner"><div class="dialoghead"><div><h2>Escàner local Pro</h2><div class="sub">Reconeixement local gratuït: nom + número de col·leccionista + codi de set. Després tries la impressió exacta.</div></div><button data-close="scannerModal">Tanca</button></div><div class="camera"><video id="camera" autoplay playsinline muted></video><canvas id="canvas" hidden></canvas><div class="frame"></div></div><div class="hint" id="visionModeHint">🧠 Reconeixement visual MTG local: detecta les cantonades, corregeix la perspectiva i compara la imatge amb el catàleg visual de cartes. No acceptaré una coincidència feble ni una candidata sense prou evidència.</div><div class="scancontrols"><button class="primary" id="captureBtn">📸 Captura</button><button id="galleryBtn">🖼️ Galeria</button><input id="photoInput" type="file" accept="image/*" capture="environment" hidden></div><div id="scanStatus" class="status"></div><div id="scanResults"></div></div></div>
 <div class="modal" id="inventoryModal"><div class="dialog scanner"><div class="dialoghead"><div><h2>⚡ Mode inventari</h2><div class="sub">Escaneja carta rere carta. Les seleccionades s'acumulen automàticament.</div></div><button data-close="inventoryModal">Finalitza</button></div><div class="camera"><video id="invCamera" autoplay playsinline muted></video><canvas id="invCanvas" hidden></canvas><div class="frame"></div></div><div class="scancontrols"><button class="primary" id="invCapture">📸 Escaneja següent</button><button id="invGallery">🖼️ Galeria</button><input id="invPhoto" type="file" accept="image/*" hidden></div><div id="invStatus" class="status"></div><div id="invQueue"></div></div></div>
-<div class="modal" id="confirmModal"><div class="dialog small"><div class="dialoghead"><div><h2 id="confirmName">Confirmar</h2><div class="sub" id="confirmMeta"></div></div><button data-close="confirmModal">Tanca</button></div><div class="form"><label>Acabat<select id="confirmFoil"><option value="false">Nonfoil</option><option value="true">Foil</option></select></label><label>Idioma<select id="confirmLang"><option>English</option><option>Spanish</option><option>Japanese</option><option>German</option><option>French</option><option>Italian</option><option>Portuguese</option></select></label><label>Estat<select id="confirmCondition"><option>NM</option><option>EX</option><option>GD</option><option>LP</option><option>MP</option><option>HP</option><option>DMG</option></select></label><label>Ubicació<input id="confirmLocation"></label><label>Valor actual / còpia (€)<input id="confirmValue" type="number" step="0.01" readonly></label><div class="hint wide">💰 El valor actual s’obté automàticament de la impressió seleccionada. El preu de compra no és necessari.</div></div><div class="dialogactions"><button data-close="confirmModal">Cancel·la</button><button class="primary" id="confirmAdd">+ Afegir a la col·lecció</button></div></div></div>
+<div class="modal" id="confirmModal"><div class="dialog small"><div class="dialoghead"><div><h2 id="confirmName">Confirmar</h2><div class="sub" id="confirmMeta"></div></div><button data-close="confirmModal">Tanca</button></div><div class="form"><label>Acabat<select id="confirmFoil"><option value="false">Nonfoil</option><option value="true">Foil</option></select></label><label>Idioma<select id="confirmLang"><option>English</option><option>Spanish</option><option>Japanese</option><option>German</option><option>French</option><option>Italian</option><option>Portuguese</option></select></label><label>Estat<select id="confirmCondition"><option>NM</option><option>EX</option><option>GD</option><option>LP</option><option>MP</option><option>HP</option><option>DMG</option></select></label><label>Nombre de còpies<input id="confirmQty" type="number" min="1" step="1" inputmode="numeric" value="1"></label><label>Ubicació<input id="confirmLocation"></label><label>Valor actual / còpia (€)<input id="confirmValue" type="number" step="0.01" readonly></label><div class="hint wide">💰 El valor actual s’obté automàticament de la impressió seleccionada. El preu de compra no és necessari.</div></div><div class="dialogactions"><button data-close="confirmModal">Cancel·la</button><button class="primary" id="confirmAdd">+ Afegir a la col·lecció</button></div></div></div>
 <div class="toast" id="toast"></div>
 <div class="modal" id="cloudModal"><div class="dialog small"><div class="dialoghead"><div><h2>☁️ Núvol i sincronització</h2><div class="sub">Supabase + autenticació. Les dades de la col·lecció queden protegides per usuari.</div></div><button data-close="cloudModal">Tanca</button></div><div class="form"><label class="wide">Supabase Project URL<input id="supabaseUrl" placeholder="https://xxxx.supabase.co"></label><label class="wide">Supabase Publishable Key<input id="supabaseKey" placeholder="sb_publishable_..." type="password"></label><label>Email<input id="cloudEmail" type="email" autocomplete="email"></label><label>Contrasenya<input id="cloudPassword" type="password" autocomplete="current-password"></label></div><div class="dialogactions"><button id="cloudSignup">Crear compte</button><button id="cloudLogin" class="primary">Iniciar sessió</button></div><div class="hint">Necessites crear el projecte Supabase i executar el fitxer <b>supabase_schema.sql</b> que incloc amb aquesta versió.</div><div id="cloudMessage" class="status"></div></div></div>
 <script>
@@ -131,160 +131,218 @@ function autoRefreshMarketPrices(){const last=localStorage.getItem('mtgPricesLas
 $('refreshPricesBtn')&&($('refreshPricesBtn').onclick=()=>refreshMarketPrices({silent:false}));$('cloudBtn').onclick=async()=>{await initCloud();const cfg=getCloudConfig();if(cfg){$('supabaseUrl').value=cfg.url||'';$('supabaseKey').value=cfg.key||''}updateCloudState();$('cloudModal').classList.add('open')};$('cloudSettings').onclick=()=>{$('cloudBtn').click()};$('cloudLogin').onclick=loginCloud;$('cloudSignup').onclick=signupCloud;$('cloudSync').onclick=()=>mergeCloud(true);$('cloudLogout').onclick=logoutCloud;
 initCloud();
 
-// Scryfall + local scanner (0 €): multi-zone OCR + collector-number matching
-let stream=null,currentPrinting=null;const scanner=$('scannerModal'),camera=$('camera'),canvas=$('canvas');
-async function loadTesseract(){if(window.Tesseract)return window.Tesseract;return new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';s.onload=()=>res(window.Tesseract);s.onerror=rej;document.head.appendChild(s)})}
-let visualExtractor=null;
-const VISUAL_MODEL_ID='Xenova/mobileclip_s0';
-const VISUAL_CACHE_KEY='mtgVisualEmbeddingsV1';
-async function loadVisualModel(){
-  if(visualExtractor)return visualExtractor;
-  if(window.__visualLoading)return window.__visualLoading;
-  window.__visualLoading=(async()=>{
-    const s=document.createElement('script');
-    s.type='module';
-    s.textContent=`import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/+esm'; window.__hfPipeline=pipeline;`;
-    document.head.appendChild(s);
-    const started=Date.now();
-    while(!window.__hfPipeline && Date.now()-started<20000) await new Promise(r=>setTimeout(r,100));
-    if(!window.__hfPipeline)throw new Error('No s’ha pogut carregar Transformers.js');
-    visualExtractor=await window.__hfPipeline('image-feature-extraction',VISUAL_MODEL_ID,{dtype:'q8'});
-    return visualExtractor;
-  })();
-  try{return await window.__visualLoading}catch(e){window.__visualLoading=null;throw e}
-}
-function visualCacheRead(){try{return JSON.parse(localStorage.getItem(VISUAL_CACHE_KEY)||'{}')}catch(e){return {}}}
-function visualCacheWrite(cache){try{const keys=Object.keys(cache);if(keys.length>120)keys.slice(0,keys.length-120).forEach(k=>delete cache[k]);localStorage.setItem(VISUAL_CACHE_KEY,JSON.stringify(cache))}catch(e){}}
-function tensorVector(x){return Array.from(x?.data||x||[])}
-function cosine(a,b){let dot=0,na=0,nb=0;const n=Math.min(a.length,b.length);for(let i=0;i<n;i++){dot+=a[i]*b[i];na+=a[i]*a[i];nb+=b[i]*b[i]}return dot/(Math.sqrt(na)*Math.sqrt(nb)||1)}
-async function imageToDataUrl(blobOrCanvas){return new Promise((res,rej)=>{if(blobOrCanvas instanceof HTMLCanvasElement){try{res(blobOrCanvas.toDataURL('image/jpeg',.9))}catch(e){rej(e)}return}const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(blobOrCanvas)})}
-async function prepareVisualProbe(blob){
-  const bmp=await createImageBitmap(blob), w=bmp.width,h=bmp.height;
-  // MTG cards are portrait 5:7. Crop the centre so the model sees the card, not the table/background.
-  const target=5/7;let cw=w,ch=Math.round(w/target);if(ch>h){ch=h;cw=Math.round(h*target)}
-  const sx=Math.max(0,Math.round((w-cw)/2)),sy=Math.max(0,Math.round((h-ch)/2));
-  const c=document.createElement('canvas');c.width=512;c.height=717;c.getContext('2d').drawImage(bmp,sx,sy,cw,ch,0,0,c.width,c.height);
-  return c;
-}
-async function visualRerank(blob,candidates,statusEl){
-  if(!candidates.length)return candidates;
-  try{
-    statusEl.textContent='🧠 Analitzant visualment la carta…';
-    const model=await loadVisualModel();
-    const probeCanvas=await prepareVisualProbe(blob);
-    const probe=tensorVector(await model(await imageToDataUrl(probeCanvas),{pooling:'mean',normalize:true}));
-    const cache=visualCacheRead(), ranked=[];
-    for(let i=0;i<candidates.length;i++){
-      const x=candidates[i];const c=x.c;let ev=null;const key=c.id;
-      if(cache[key]?.embedding)ev=cache[key].embedding;
-      if(!ev){const img=c.image_uris?.normal||c.card_faces?.[0]?.image_uris?.normal;if(img){try{ev=tensorVector(await model(img,{pooling:'mean',normalize:true}));cache[key]={embedding:ev,name:c.name,image:img,at:Date.now()}}catch(e){}}}
-      const visual=ev?cosine(probe,ev):0;
-      // OCR remains useful, but image evidence gets the larger weight.
-      const total=x.score*.35+visual*.65;
-      ranked.push({...x,visual,total});
-      statusEl.textContent=`🧠 Comparant imatge · ${i+1}/${candidates.length}…`;
+// CollectorVision scanner: real visual card detection + full MTG catalog.
+// The engine is loaded only when the scanner is opened; inference runs locally.
+const CV_BASE='https://hanclinto.github.io/CollectorVision/';
+const CV_ASSETS=CV_BASE+'assets';
+const CV_WORKER_URL=CV_BASE+'scanner.worker.mjs';
+const CV_ORT_IMPORT=CV_BASE+'vendor/onnxruntime-web/ort.webgpu.min.mjs';
+let stream=null,currentPrinting=null,cvWorker=null,cvReady=null,cvInitPromise=null,cvRequest=null;
+const scanner=$('scannerModal'),camera=$('camera'),canvas=$('canvas');
+function cvIsIOS(){return /iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)}
+async function loadCollectorVision(){
+  if(cvReady)return cvReady;
+  if(cvInitPromise)return cvInitPromise;
+  cvInitPromise=(async()=>{
+    $('scanStatus').textContent='🧠 Carregant el motor visual MTG…';
+    const mr=await fetch(CV_ASSETS+'/manifest.json',{cache:'no-store'});
+    if(!mr.ok)throw new Error('No puc carregar el catàleg visual');
+    const manifest=await mr.json();
+    const wr=await fetch(CV_WORKER_URL,{cache:'no-store'});
+    if(!wr.ok)throw new Error('No puc carregar el motor visual');
+    let source=await wr.text();
+    source=source.replace(/from "\.\/vendor\/onnxruntime-web\/ort\.webgpu\.min\.mjs\?v=__BUILD_ID__"/,`from "${CV_ORT_IMPORT}"`);
+    // The worker is executed from a Blob URL, so every relative import inside it
+    // must be absolute. We use the bundled v1 MTG catalog and expose the runner's
+    // second-best score as an explicit confidence margin.
+    source=source.replace(/new URL\("\.\/lib\/collectorvision-catalog-v2\.mjs", import\.meta\.url\)/g,`new URL("${CV_BASE}lib/collectorvision-catalog-v2.mjs")`);
+    source=source.replace(/  search\(query\) \{[\s\S]*?\n  \}\n\}/,`  search(query) {
+    const dims = this.catalogDims ?? this.manifest.catalog.dims;
+    const rows = this.catalogRows ?? this.manifest.catalog.rows;
+    let bestScore = -Infinity;
+    let secondScore = -Infinity;
+    let bestIndex = -1;
+    let secondIndex = -1;
+    for (let row = 0; row < rows; row += 1) {
+      const offset = row * dims;
+      let score = 0;
+      for (let col = 0; col < dims; col += 1) {
+        score += FLOAT16_LOOKUP[this.embeddings[offset + col]] * query[col];
+      }
+      if (score > bestScore) {
+        secondScore = bestScore;
+        secondIndex = bestIndex;
+        bestScore = score;
+        bestIndex = row;
+      } else if (score > secondScore) {
+        secondScore = score;
+        secondIndex = row;
+      }
     }
-    visualCacheWrite(cache);
-    return ranked.sort((a,b)=>b.total-a.total);
-  }catch(e){console.warn('Visual model unavailable',e);return candidates.map(x=>({...x,visual:null,total:x.score})).sort((a,b)=>b.total-a.total)}
-}
-async function startCam(video){const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1440}},audio:false});video.srcObject=s;return s}
-function stop(s,video){if(s)s.getTracks().forEach(t=>t.stop());if(video)video.srcObject=null}
-function cleanOCR(t){return t.replace(/[^\p{L}\p{N}\s#./-]/gu,' ').replace(/\s+/g,' ').trim()}
-function parseCollector(text){const raw=text.toUpperCase().replace(/\n/g,' ');const out=[];const patterns=[
-  /\b([A-Z0-9]{2,6})\s*[·•:\-]?\s*([0-9]{1,4}[A-Z]{0,2})\b/g,
-  /\b([A-Z]{2,6})\s*[|/]\s*([0-9]{1,4}[A-Z]{0,2})\b/g,
-  /\b([0-9]{1,4}[A-Z]{0,2})\s*[·•|]\s*([A-Z0-9]{2,6})\b/g
-];
-  for(const re of patterns){let m;while((m=re.exec(raw))){let a=m[1],b=m[2];if(/^\d/.test(a)){[a,b]=[b,a]}if(/[A-Z]/.test(a)&&/\d/.test(b)&&b.length<=6)out.push({set:a,number:b})}}
-  return [...new Map(out.map(x=>[x.set+'|'+x.number,x])).values()].slice(0,8)
-}
-async function ocrImage(T,canvas,mode){
-  const r=await T.recognize(canvas,'eng',{logger:()=>{},config:{tessedit_pageseg_mode:String(mode||6),preserve_interword_spaces:'1'}});return r.data.text||''
-}
-async function preprocessCrop(bmp,sx,sy,sw,sh,scale=3,contrast=false,threshold=false){
-  const c=document.createElement('canvas');c.width=Math.max(1,Math.round(sw*scale));c.height=Math.max(1,Math.round(sh*scale));
-  const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingEnabled=true;x.drawImage(bmp,sx,sy,sw,sh,0,0,c.width,c.height);
-  if(contrast||threshold){const d=x.getImageData(0,0,c.width,c.height),a=d.data;for(let i=0;i<a.length;i+=4){let g=.299*a[i]+.587*a[i+1]+.114*a[i+2];if(contrast)g=g<128?Math.max(0,g-35):Math.min(255,g+35);if(threshold)g=g>150?255:0;a[i]=a[i+1]=a[i+2]=g}x.putImageData(d,0,0)}return c
-}
-function normalizeOCRName(t){return cleanOCR(t).replace(/^[^\p{L}]+/u,'').replace(/[^\p{L}\p{N}'’&,:.\-\s]/gu,' ').replace(/\s+/g,' ').trim()}
-function plausibleName(t){const x=normalizeOCRName(t);if(x.length<3||x.length>60)return false;if(/^magic( the)? gathering$/i.test(x))return false;if(/^\d+[\s#/-]*\d*$/i.test(x))return false;return /[\p{L}]/u.test(x)}
-function titleCandidates(lines){
-  const out=[];for(const x of lines){const n=normalizeOCRName(x);if(plausibleName(n))out.push(n)}
-  return [...new Set(out)].sort((a,b)=>{const sa=(b.match(/[A-Z]/g)||[]).length-(a.match(/[A-Z]/g)||[]).length;return sa||b.length-a.length}).slice(0,18)
-}
-function levenshtein(a,b){a=a.toLowerCase();b=b.toLowerCase();const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=Array.from({length:n+1},(_,i)=>i),q=new Array(n+1);for(let i=1;i<=m;i++){q[0]=i;for(let j=1;j<=n;j++)q[j]=Math.min(q[j-1]+1,p[j]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));[p,q]=[q,p]}return p[n]}
-function nameSimilarity(a,b){a=normalizeOCRName(a).toLowerCase();b=normalizeOCRName(b).toLowerCase();if(!a||!b)return 0;const d=levenshtein(a,b),base=Math.max(a.length,b.length);let s=1-d/base;const aw=a.split(/\s+/),bw=b.split(/\s+/);let hits=0;for(const w of aw)if(w.length>2&&bw.some(x=>x===w||x.includes(w)||w.includes(x)))hits++;if(aw.length) s+=Math.min(.18,hits/aw.length*.18);return Math.max(0,Math.min(1,s))}
-function buildNameQueries(lines){const cleaned=lines.map(normalizeOCRName).filter(plausibleName);const q=[];for(let i=0;i<cleaned.length;i++){q.push(cleaned[i]);if(i+1<cleaned.length){const joined=(cleaned[i]+' '+cleaned[i+1]).trim();if(joined.length<=70)q.push(joined)}}return [...new Set(q)].sort((a,b)=>b.length-a.length).slice(0,28)}
-async function identifyByName(lines,statusEl,resultsEl){
-  const queries=buildNameQueries(lines), pool=new Map();
-  for(let i=0;i<queries.length;i++){
-    const line=queries[i];statusEl.textContent=`🔎 Contrastant nom ${i+1}/${queries.length}…`;
-    try{
-      const ar=await fetch('https://api.scryfall.com/cards/autocomplete?q='+encodeURIComponent(line),{headers:{Accept:'application/json'}});
-      if(ar.ok){const ad=await ar.json();for(const name of (ad.data||[]).slice(0,12)){const score=nameSimilarity(line,name);const prev=pool.get(name);if(!prev||score>prev.score)pool.set(name,{name,score,line})}}
-    }catch(e){}
-    if(i<queries.length-1)await new Promise(r=>setTimeout(r,70));
+    const secondaryId = this.secondaryIds?.[bestIndex] ?? null;
+    const best = {
+      score: bestScore,
+      secondScore,
+      scoreMargin: bestScore - secondScore,
+      cardId: this.cardIds[bestIndex],
+      secondCardId: secondIndex >= 0 ? this.cardIds[secondIndex] : null,
+      cardName: this.cardNames?.[bestIndex] ?? null,
+      secondaryId,
+      secondaryIdField: this.secondaryIdField,
+    };
+    if (this.secondaryIdField && secondaryId !== null && secondaryId !== undefined) {
+      best[this.secondaryIdField] = secondaryId;
+    }
+    return best;
   }
-  const ranked=[...pool.values()].sort((a,b)=>b.score-a.score).slice(0,10);const matches=[];
-  for(const item of ranked){
-    try{let r=await fetch('https://api.scryfall.com/cards/named?exact='+encodeURIComponent(item.name),{headers:{Accept:'application/json'}});if(!r.ok)r=await fetch('https://api.scryfall.com/cards/named?fuzzy='+encodeURIComponent(item.line),{headers:{Accept:'application/json'}});if(r.ok){const c=await r.json();matches.push({c,line:item.line,score:Math.max(item.score,nameSimilarity(item.line,c.name))})}}catch(e){}
-    if(matches.length>=10)break
-  }
-  return matches.sort((a,b)=>b.score-a.score)
+}`);
+    source=source.replace(/score: best\.score,\n    orientation:/,`score: best.score,
+    secondScore: best.secondScore,
+    scoreMargin: best.scoreMargin,
+    secondCardId: best.secondCardId,
+    orientation:`);
+    const blob=new Blob([source],{type:'text/javascript'});
+    cvWorker=new Worker(URL.createObjectURL(blob),{type:'module'});
+    cvReady=new Promise((resolve,reject)=>{
+      const onMessage=({data})=>{
+        if(data.type==='progress'){
+          if(data.stage==='detector')$('scanStatus').textContent=`🧠 Preparant detector visual · ${Math.round((data.ratio||0)*100)}%`;
+          else if(data.stage==='embedder')$('scanStatus').textContent=`🧠 Preparant model visual · ${Math.round((data.ratio||0)*100)}%`;
+          else if(data.stage==='catalog')$('scanStatus').textContent=`📚 Carregant catàleg MTG · ${Math.round((data.ratio||0)*100)}%`;
+          return;
+        }
+        if(data.type==='ready'){
+          cvWorker.removeEventListener('message',onMessage);
+          resolve({manifest,rows:data.catalogRows||manifest.catalog?.rows||0});
+          return;
+        }
+        if(data.type==='error'){
+          cvWorker.removeEventListener('message',onMessage);reject(new Error(data.message||'Error del motor visual'));
+        }
+      };
+      cvWorker.addEventListener('message',onMessage);
+      cvWorker.addEventListener('error',e=>reject(new Error(e.message||'Error del worker visual')),{once:true});
+      cvWorker.postMessage({type:'init',manifest,assetBasePath:CV_ASSETS,enableWebGpu:false,catalogLimit:null,rotationInvariant:true,minCornerConfidence:.04,catalogMode:'v1'});
+    });
+    await cvReady;
+    $('scanStatus').textContent='✓ Motor visual preparat. Apunta a una carta i captura.';
+    return cvReady;
+  })();
+  try{return await cvInitPromise}catch(e){cvInitPromise=null;cvReady=null;try{cvWorker?.terminate()}catch(_){}cvWorker=null;throw e}
+}
+function requestVisualFrame(bitmap){
+  return new Promise((resolve,reject)=>{
+    if(!cvWorker)return reject(new Error('Motor visual no inicialitzat'));
+    const timeout=setTimeout(()=>{cvRequest=null;reject(new Error('El motor visual ha trigat massa'))},15000);
+    cvRequest={resolve:(d)=>{clearTimeout(timeout);cvRequest=null;resolve(d)},reject:(e)=>{clearTimeout(timeout);cvRequest=null;reject(e)}};
+    cvWorker.postMessage({type:'frame',bitmap,captureRequested:true,includeDebugBitmaps:false},[bitmap]);
+  });
+}
+async function ensureVisualMessageHandler(){
+  if(cvWorker.__mtgHandler)return;
+  cvWorker.__mtgHandler=true;
+  cvWorker.addEventListener('message',({data})=>{
+    if(data.type==='result'&&cvRequest){const r=cvRequest;cvRequest=null;r.resolve(data)}
+    else if(data.type==='error'&&cvRequest){const r=cvRequest;cvRequest=null;r.reject(new Error(data.message||'Error del motor visual'))}
+  });
 }
 async function identify(blob,statusEl,resultsEl){
- try{
-  const scanner=resultsEl.closest('.scanner');if(resultsEl.id==='scanResults'&&scanner)scanner.classList.add('has-results');
-  statusEl.textContent='📷 Preparant la imatge…';resultsEl.innerHTML='';const T=await loadTesseract();const bmp=await createImageBitmap(blob);const w=bmp.width,h=bmp.height;
-  // Ensemble OCR: several title crops, preprocessing variants and page segmentation modes.
-  const crops=[
-   ['title-a',await preprocessCrop(bmp,0,h*.005,w,h*.145,4,false,false)],
-   ['title-b',await preprocessCrop(bmp,0,h*.01,w,h*.19,4,false,false)],
-   ['title-c',await preprocessCrop(bmp,w*.025,h*.005,w*.95,h*.17,4,true,false)],
-   ['title-d',await preprocessCrop(bmp,w*.04,h*.015,w*.92,h*.15,5,false,true)],
-   ['title-e',await preprocessCrop(bmp,0,h*.02,w,h*.24,3,false,false)],
-   ['collector-left',await preprocessCrop(bmp,w*.02,h*.82,w*.72,h*.18,5,true,false)],
-   ['collector-bottom',await preprocessCrop(bmp,0,h*.78,w,h*.22,4,true,false)],
-   ['full-top',await preprocessCrop(bmp,0,0,w,h*.34,2.5,false,false)]
-  ];
-  let nameLines=[],collectorHits=[];
-  const modes=[7,6,11];
-  for(let i=0;i<crops.length;i++){
-    statusEl.textContent=`📝 Lectura intel·ligent ${i+1}/${crops.length}…`;const [kind,c]=crops[i];
-    for(const mode of (kind.startsWith('title')?[7,11]:[6,11])){
-      const text=await ocrImage(T,c,mode);const cleaned=text.split(/\n+/).map(cleanOCR).filter(x=>x.length>=2&&x.length<80);
-      if(kind.startsWith('title')||kind==='full-top')nameLines.push(...cleaned);collectorHits.push(...parseCollector(text));
+  try{
+    const sc=resultsEl.closest('.scanner');
+    if(sc&&resultsEl.id==='scanResults')sc.classList.add('has-results');
+    await loadCollectorVision();
+    await ensureVisualMessageHandler();
+    statusEl.textContent='🎴 Analitzant visualment la carta…';
+    resultsEl.innerHTML='';
+
+    const video=resultsEl.id==='scanResults'?camera:$('invCamera');
+    const isLiveCapture=!!video?.videoWidth && !!video?.srcObject;
+    const frameCount=isLiveCapture?3:1;
+    const frames=[];
+    frames.push(await createImageBitmap(blob));
+    for(let i=1;i<frameCount;i++){
+      await new Promise(r=>setTimeout(r,180));
+      const c=document.createElement('canvas');
+      c.width=video.videoWidth;
+      c.height=video.videoHeight;
+      c.getContext('2d').drawImage(video,0,0);
+      const b=await new Promise((res,rej)=>c.toBlob(x=>x?res(x):rej(new Error('No he pogut capturar el frame')), 'image/jpeg',.94));
+      frames.push(await createImageBitmap(b));
     }
+
+    const results=[];
+    for(let i=0;i<frames.length;i++){
+      statusEl.textContent=`🎴 Reconeixement visual · ${i+1}/${frames.length}…`;
+      results.push(await requestVisualFrame(frames[i]));
+    }
+    frames.forEach(f=>f.close?.());
+
+    const valid=results.filter(r=>r.cardPresent&&r.cornersValid&&r.cardId&&Number.isFinite(r.score));
+    if(!valid.length){
+      statusEl.textContent='❌ No he detectat cap carta amb prou confiança.';
+      resultsEl.innerHTML='<div class="hint"><b>No identificada.</b><br>La carta no ha passat el detector de cantonades o la coincidència visual no és prou clara. No triaré cap carta automàticament.</div><div class="toolbar" style="margin-top:8px"><button id="scanRetryBtn" class="primary">↻ Tornar a provar</button></div>';
+      const retry=$('scanRetryBtn');if(retry)retry.onclick=()=>{sc?.classList.remove('has-results');resultsEl.innerHTML='';statusEl.textContent='Centra la carta sencera dins del marc.'};
+      return;
+    }
+
+    const groups=new Map();
+    for(const r of valid){
+      const g=groups.get(r.cardId)||{id:r.cardId,count:0,max:-Infinity,scores:[],margins:[]};
+      g.count++;
+      g.max=Math.max(g.max,r.score);
+      g.scores.push(r.score);
+      if(Number.isFinite(r.scoreMargin))g.margins.push(r.scoreMargin);
+      groups.set(r.cardId,g);
+    }
+    const ranked=[...groups.values()].sort((a,b)=>(b.count-a.count)||(b.max-a.max));
+    const best=ranked[0];
+    const avg=best.scores.reduce((a,b)=>a+b,0)/best.scores.length;
+    const margin=best.margins.length?Math.min(...best.margins):0;
+
+    // Conservative acceptance policy:
+    // - live camera: at least 2 agreeing frames, average >= .70 and margin >= .04
+    // - gallery: one clean frame, score >= .82 and margin >= .06
+    const accepted=isLiveCapture
+      ? best.count>=2 && avg>=0.70 && margin>=0.04
+      : best.max>=0.82 && margin>=0.06;
+
+    if(!accepted){
+      const reason=isLiveCapture
+        ? `Només ${best.count}/${frameCount} frames coincideixen (mitjana ${Math.round(avg*100)}%, marge ${Math.round(margin*100)}%).`
+        : `La millor coincidència és ${Math.round(best.max*100)}% i el marge respecte de la segona candidata és ${Math.round(margin*100)}%.`;
+      statusEl.textContent='⚠️ No tinc prou confiança.';
+      resultsEl.innerHTML=`<div class="hint"><b>No vull inventar-me la carta.</b><br>${esc(reason)}<br><br>Acosta la carta, centra-la completament, evita reflexos i intenta que ocupi bona part de la pantalla.</div><div class="toolbar" style="margin-top:8px"><button id="scanRetryBtn" class="primary">↻ Tornar a provar</button></div>`;
+      const retry=$('scanRetryBtn');if(retry)retry.onclick=()=>{sc?.classList.remove('has-results');resultsEl.innerHTML='';statusEl.textContent='Centra la carta sencera dins del marc.'};
+      return;
+    }
+
+    statusEl.textContent=`🎯 Carta identificada · ${Math.round(avg*100)}% · marge ${Math.round(margin*100)}%`;
+    const r=await fetch('https://api.scryfall.com/cards/'+encodeURIComponent(best.id),{headers:{Accept:'application/json'}});
+    if(!r.ok)throw new Error('No he pogut obtenir les dades de Scryfall');
+    const c=await r.json();
+    renderDetectedCard(c,statusEl,resultsEl,`Identificació visual confirmada · ${Math.round(avg*100)}% de similitud. No s'ha seleccionat cap impressió encara.`);
+  }catch(e){
+    console.error(e);
+    statusEl.textContent='❌ No s’ha pogut analitzar la carta.';
+    resultsEl.innerHTML=`<div class="hint"><b>Error de l’escàner.</b><br>${esc(e.message||'Error desconegut')}. Pots tornar-ho a provar.</div>`
   }
-  const collectors=[...new Map(collectorHits.map(x=>[x.set+'|'+x.number,x])).values()];
-  // Collector number/set is the strongest signal when both are readable.
-  for(const hit of collectors){try{const r=await fetch(`https://api.scryfall.com/cards/${encodeURIComponent(hit.set)}/${encodeURIComponent(hit.number)}`,{headers:{Accept:'application/json'}});if(r.ok){const c=await r.json();statusEl.textContent=`🎯 Impressió exacta detectada · ${c.set_name} #${c.collector_number}`;return showExactLocal(c,hit,statusEl,resultsEl)}}catch(e){}}
-  statusEl.textContent='🔎 Comparant lectures del nom…';
-  const matches=await identifyByName(nameLines,statusEl,resultsEl);const unique=[...new Map(matches.map(x=>[x.c.name,x])).values()];
-  const visuallyRanked=await visualRerank(blob,unique,statusEl);
-  if(!unique.length){
-    resultsEl.innerHTML=`<div class="hint"><b>No he pogut identificar la carta amb prou confiança.</b><br>Prova d’acostar una mica la càmera, evitar reflexos i enquadrar la carta sencera. També pots buscar-la pel nom.</div><div class="toolbar" style="margin-top:8px"><input class="control search" id="manualName" placeholder="Nom de la carta"><button class="primary" id="manualSearch">Cercar</button></div>`;
-    $('manualSearch').onclick=()=>showPrintings($('manualName').value.trim(),statusEl,resultsEl);return
-  }
-  const ranked=visuallyRanked.length?visuallyRanked:unique;const best=ranked[0]?.total??ranked[0]?.score??0;
-  if(ranked.length>1 || best<0.92){
-    statusEl.textContent='🎴 He comparat text + imatge. Tria la carta correcta:';
-    resultsEl.innerHTML='<div class="hint"><b>Identificació assistida per imatge</b><br>La primera vegada pot trigar una mica mentre es descarrega el model visual gratuït (~12 MB). Després queda guardat al navegador.</div><div class="printgrid">'+ranked.map(x=>{const c=x.c,img=c.image_uris?.small||c.card_faces?.[0]?.image_uris?.small||'';const vis=x.visual==null?'':` · visual ${Math.round(x.visual*100)}%`;return `<div class="print"><img src="${esc(img)}"><div class="printbody"><div class="printname">${esc(c.name)}</div><div class="meta">${esc(c.type_line||'')}</div><div class="meta">Text ${Math.round(x.score*100)}%${vis}</div><button class="primary" data-name="${esc(c.name)}">✓ Aquesta carta</button></div></div>`}).join('')+'</div>';
-    resultsEl.querySelectorAll('[data-name]').forEach(b=>b.onclick=()=>showPrintings(b.dataset.name,statusEl,resultsEl));return
-  }
-  await showPrintings(unique[0].c.name,statusEl,resultsEl)
- }catch(e){console.error(e);statusEl.textContent='No s’ha pogut processar la foto. Prova amb més llum i la carta completament plana.'}
 }
-function renderDetectedCard(c,statusEl,resultsEl,extraHint=''){const img=c.image_uris?.normal||c.card_faces?.[0]?.image_uris?.normal||'';resultsEl.innerHTML=`<div class="hint"><b>🎯 Carta detectada</b><br>${esc(extraHint||'Revisa la carta abans de continuar.')}</div><div class="printgrid"><div class="print"><img src="${esc(img)}"><div class="printbody"><div class="printname">${esc(c.name)}</div><div class="meta">${esc(c.type_line||'')}</div><div class="meta">${esc(c.mana_cost||'')} · ${esc(c.rarity||'')}</div><button class="primary" id="chooseDetected">✓ Seleccionar aquesta carta</button><button id="detectedPrintings">Veure totes les impressions</button></div></div></div>`;$('chooseDetected').onclick=()=>showPrintings(c.name,statusEl,resultsEl);$('detectedPrintings').onclick=()=>showPrintings(c.name,statusEl,resultsEl)}
-function showExactLocal(c,hit,statusEl,resultsEl){statusEl.textContent=`🎯 Carta detectada · ${c.name}`;renderDetectedCard(c,statusEl,resultsEl,`Número detectat: ${esc(hit.set)} · #${esc(hit.number)}. Ara tria la impressió exacta.`)}
-async function showPrintings(name,statusEl,resultsEl){if(!name)return;statusEl.textContent=`Buscant totes les impressions de ${name}…`;resultsEl.innerHTML='';try{const q=encodeURIComponent('!"'+name+'"');let url=`https://api.scryfall.com/cards/search?q=${q}&unique=prints&order=released&dir=desc`;let all=[];for(let page=0;url&&page<8;page++){const r=await fetch(url,{headers:{Accept:'application/json'}});if(!r.ok)throw 0;const d=await r.json();all.push(...(d.data||[]));url=d.has_more?d.next_page:null;if(url)await new Promise(r=>setTimeout(r,120))}statusEl.textContent=`${all.length} impressions trobades. Tria exactament la teva.`;resultsEl.innerHTML=`<div class="toolbar" style="margin-bottom:8px"><button id="scanAgainBtn">← Escanejar una altra</button></div><div class="hint">Revisa <b>set + número + any + acabat</b> abans d’afegir-la.</div><div class="printgrid">${all.map(c=>{const img=c.image_uris?.small||c.card_faces?.[0]?.image_uris?.small||'';return `<div class="print"><img src="${esc(img)}"><div class="printbody"><div class="printname">${esc(c.set_name||c.set)}</div><div class="meta">#${esc(c.collector_number)} · ${(c.released_at||'').slice(0,4)} · ${esc(c.rarity||'')}</div><div class="meta">${esc((c.finishes||[]).join(' · '))}</div><button class="primary" data-print="${esc(c.id)}">Aquesta</button></div></div>`}).join('')}</div>`;resultsEl.querySelectorAll('[data-print]').forEach(b=>b.onclick=()=>{const c=all.find(x=>x.id===b.dataset.print);openConfirm(c)});const again=$('scanAgainBtn');if(again)again.onclick=()=>{const scanner=resultsEl.closest('.scanner');if(scanner)scanner.classList.remove('has-results');resultsEl.innerHTML='';statusEl.textContent='Centra la carta sencera dins del marc.';if(scanner?.id!=='inventoryModal')startCam(camera).then(s=>{stream=s}).catch(()=>{})}}catch(e){statusEl.textContent='No he pogut carregar les impressions. Comprova la connexió.'}}
+
+function renderDetectedCard(c,statusEl,resultsEl,extraHint=''){
+ const img=c.image_uris?.normal||c.card_faces?.[0]?.image_uris?.normal||'';
+ resultsEl.innerHTML=`<div class="hint"><b>🎯 Carta identificada visualment</b><br>${esc(extraHint)}</div><div class="printgrid"><div class="print"><img src="${esc(img)}"><div class="printbody"><div class="printname">${esc(c.name)}</div><div class="meta">${esc(c.type_line||'')}</div><div class="meta">${esc(c.mana_cost||'')} · ${esc(c.rarity||'')}</div><button class="primary" id="chooseDetected">✓ Aquesta carta</button><button id="detectedPrintings">Veure totes les impressions</button></div></div></div>`;
+ $('chooseDetected').onclick=()=>showPrintings(c.name,statusEl,resultsEl);$('detectedPrintings').onclick=()=>showPrintings(c.name,statusEl,resultsEl)
+}
+async function showPrintings(name,statusEl,resultsEl){if(!name)return;statusEl.textContent=`Buscant totes les impressions de ${name}…`;resultsEl.innerHTML='';try{const q=encodeURIComponent('!"'+name+'"');let url=`https://api.scryfall.com/cards/search?q=${q}&unique=prints&order=released&dir=desc`;let all=[];for(let page=0;url&&page<8;page++){const r=await fetch(url,{headers:{Accept:'application/json'}});if(!r.ok)throw 0;const d=await r.json();all.push(...(d.data||[]));url=d.has_more?d.next_page:null;if(url)await new Promise(r=>setTimeout(r,120))}statusEl.textContent=`${all.length} impressions trobades. Tria exactament la teva.`;resultsEl.innerHTML=`<div class="toolbar" style="margin-bottom:8px"><button id="scanAgainBtn">← Escanejar una altra</button></div><div class="hint">Revisa <b>set + número + any + acabat</b> abans d’afegir-la.</div><div class="printgrid">${all.map(c=>{const img=c.image_uris?.small||c.card_faces?.[0]?.image_uris?.small||'';return `<div class="print"><img src="${esc(img)}"><div class="printbody"><div class="printname">${esc(c.set_name||c.set)}</div><div class="meta">#${esc(c.collector_number)} · ${(c.released_at||'').slice(0,4)} · ${esc(c.rarity||'')}</div><div class="meta">${esc((c.finishes||[]).join(' · '))}</div><button class="primary" data-print="${esc(c.id)}">Aquesta</button></div></div>`}).join('')}</div>`;resultsEl.querySelectorAll('[data-print]').forEach(b=>b.onclick=()=>{const c=all.find(x=>x.id===b.dataset.print);openConfirm(c)});const again=$('scanAgainBtn');if(again)again.onclick=()=>{const sc=resultsEl.closest('.scanner');if(sc)sc.classList.remove('has-results');resultsEl.innerHTML='';statusEl.textContent='Centra la carta sencera dins del marc.'}}catch(e){statusEl.textContent='No he pogut carregar les impressions. Comprova la connexió.'}}
 function priceForPrinting(c,foil=false){const p=c?.prices||{};const v=foil?(p.eur_foil??p.eur):(p.eur??p.eur_foil);return v==null||v===''?0:Number(v)||0}
-function openConfirm(c){currentPrinting=c;$('confirmName').textContent=c.name;$('confirmMeta').textContent=`${c.set_name} · #${c.collector_number} · ${(c.released_at||'').slice(0,4)} · ${(c.rarity||'')}`;$('confirmFoil').value='false';$('confirmLang').value=(c.lang==='es'?'Spanish':c.lang==='ja'?'Japanese':c.lang==='de'?'German':c.lang==='fr'?'French':c.lang==='it'?'Italian':c.lang==='pt'?'Portuguese':'English');$('confirmCondition').value='NM';$('confirmLocation').value='';$('confirmValue').value=priceForPrinting(c,false).toFixed(2);$('confirmModal').classList.add('open')}
-function addPrinting(c,opts={}){const colors=c.colors||[];const map={W:'Blanc',U:'Blau',B:'Negre',R:'Vermell',G:'Verd'};const color=colors.length>1?'Multicolor':colors.length===1?map[colors[0]]:(c.type_line||'').includes('Land')?'Terreny':'Incolor';const foil=!!opts.foil;const marketValue=priceForPrinting(c,foil);const item={id:crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random()),name:c.name,set:c.set_name||c.set,num:c.collector_number||'—',color,mana:c.mana_cost||'',rarity:c.rarity||'special',qty:1,foil,lang:opts.lang||'English',condition:opts.condition||'NM',purchase:0,value:marketValue,location:opts.location||'',notes:'',added:new Date().toISOString().slice(0,10),scryfallId:c.id,oracleId:c.oracle_id||'',image:c.image_uris?.normal||c.card_faces?.[0]?.image_uris?.normal||'',cardData:{prices:c.prices||{},priceUpdatedAt:new Date().toISOString()}};const existing=cards.find(x=>x.scryfallId===item.scryfallId&&x.foil===item.foil&&x.lang===item.lang&&x.condition===item.condition&&x.location===item.location);if(existing){existing.qty++;existing.value=marketValue;existing.cardData={...(existing.cardData||{}),prices:c.prices||{},priceUpdatedAt:new Date().toISOString()}}else cards.push(item);save();render();return item}
-$('confirmAdd').onclick=()=>{if(!currentPrinting)return;addPrinting(currentPrinting,{foil:$('confirmFoil').value==='true',lang:$('confirmLang').value,condition:$('confirmCondition').value,location:$('confirmLocation').value});$('confirmModal').classList.remove('open');$('scannerModal').classList.remove('open');stop(stream,camera);stream=null;toast('Carta afegida · valor actual actualitzat')};$('confirmFoil').onchange=()=>{if(currentPrinting)$('confirmValue').value=priceForPrinting(currentPrinting,$('confirmFoil').value==='true').toFixed(2)};$('scanBtn').onclick=async()=>{$('scannerModal').classList.add('open');$('scannerModal').querySelector('.scanner').classList.remove('has-results');$('scanStatus').textContent='Iniciant càmera…';$('scanResults').innerHTML='';try{stream=await startCam(camera);$('scanStatus').textContent='Centra la carta sencera dins del marc.'}catch(e){$('scanStatus').textContent='No puc obrir la càmera. Pots usar Galeria.'}};$('captureBtn').onclick=()=>{if(!camera.videoWidth)return;$('canvas').width=camera.videoWidth;$('canvas').height=camera.videoHeight;$('canvas').getContext('2d').drawImage(camera,0,0);$('canvas').toBlob(b=>identify(b,$('scanStatus'),$('scanResults')),'image/jpeg',.94)};$('galleryBtn').onclick=()=>$('photoInput').click();$('photoInput').onchange=e=>{const f=e.target.files?.[0];if(f)identify(f,$('scanStatus'),$('scanResults'))};
+function openConfirm(c){currentPrinting=c;$('confirmName').textContent=c.name;$('confirmMeta').textContent=`${c.set_name} · #${c.collector_number} · ${(c.released_at||'').slice(0,4)} · ${(c.rarity||'')}`;$('confirmFoil').value='false';$('confirmLang').value=(c.lang==='es'?'Spanish':c.lang==='ja'?'Japanese':c.lang==='de'?'German':c.lang==='fr'?'French':c.lang==='it'?'Italian':c.lang==='pt'?'Portuguese':'English');$('confirmCondition').value='NM';$('confirmQty').value='1';$('confirmLocation').value='';$('confirmValue').value=priceForPrinting(c,false).toFixed(2);$('confirmModal').classList.add('open')}
+function addPrinting(c,opts={}){const colors=c.colors||[];const map={W:'Blanc',U:'Blau',B:'Negre',R:'Vermell',G:'Verd'};const color=colors.length>1?'Multicolor':colors.length===1?map[colors[0]]:(c.type_line||'').includes('Land')?'Terreny':'Incolor';const foil=!!opts.foil;const marketValue=priceForPrinting(c,foil);const quantity=Math.max(1,Math.floor(Number(opts.qty)||1));const item={id:crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random()),name:c.name,set:c.set_name||c.set,num:c.collector_number||'—',color,mana:c.mana_cost||'',rarity:c.rarity||'special',qty:quantity,foil,lang:opts.lang||'English',condition:opts.condition||'NM',purchase:0,value:marketValue,location:opts.location||'',notes:'',added:new Date().toISOString().slice(0,10),scryfallId:c.id,oracleId:c.oracle_id||'',image:c.image_uris?.normal||c.card_faces?.[0]?.image_uris?.normal||'',cardData:{prices:c.prices||{},priceUpdatedAt:new Date().toISOString()}};const existing=cards.find(x=>x.scryfallId===item.scryfallId&&x.foil===item.foil&&x.lang===item.lang&&x.condition===item.condition&&x.location===item.location);if(existing){existing.qty+=quantity;existing.value=marketValue;existing.cardData={...(existing.cardData||{}),prices:c.prices||{},priceUpdatedAt:new Date().toISOString()}}else cards.push(item);save();render();return item}
+$('confirmAdd').onclick=()=>{if(!currentPrinting)return;addPrinting(currentPrinting,{foil:$('confirmFoil').value==='true',lang:$('confirmLang').value,condition:$('confirmCondition').value,location:$('confirmLocation').value,qty:$('confirmQty').value});$('confirmModal').classList.remove('open');$('scannerModal').classList.remove('open');stop(stream,camera);stream=null;toast('Carta afegida · valor actual actualitzat')};$('confirmFoil').onchange=()=>{if(currentPrinting)$('confirmValue').value=priceForPrinting(currentPrinting,$('confirmFoil').value==='true') .toFixed(2)};
+async function openScanner(){ $('scannerModal').classList.add('open');$('scannerModal').querySelector('.scanner').classList.remove('has-results');$('scanStatus').textContent='Iniciant càmera…';$('scanResults').innerHTML='';try{stream=await startCam(camera);await loadCollectorVision();$('scanStatus').textContent='Centra la carta sencera dins del marc.'}catch(e){$('scanStatus').textContent=`No puc iniciar l’escàner: ${e.message||'error'}`}}
+$('scanBtn').onclick=openScanner;$('captureBtn').onclick=async()=>{if(!camera.videoWidth)return;$('scanStatus').textContent='Capturant…';const c=document.createElement('canvas');c.width=camera.videoWidth;c.height=camera.videoHeight;c.getContext('2d').drawImage(camera,0,0);c.toBlob(b=>identify(b,$('scanStatus'),$('scanResults')),'image/jpeg',.94)};$('galleryBtn').onclick=()=>$('photoInput').click();$('photoInput').onchange=e=>{const f=e.target.files?.[0];if(f)identify(f,$('scanStatus'),$('scanResults'))};
 let invStream=null;const invBtn=$('inventoryBtn');if(invBtn){invBtn.onclick=async()=>{$('inventoryModal').classList.add('open');$('invStatus').textContent='Iniciant càmera…';$('invQueue').innerHTML='';try{invStream=await startCam($('invCamera'));$('invStatus').textContent='Escaneja la primera carta.'}catch(e){$('invStatus').textContent='No puc obrir la càmera. Pots usar Galeria.'}};$('invCapture').onclick=()=>{const v=$('invCamera'),c=$('invCanvas');if(!v.videoWidth)return;c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);c.toBlob(b=>identify(b,$('invStatus'),$('invQueue')),'image/jpeg',.94)};$('invGallery').onclick=()=>$('invPhoto').click();$('invPhoto').onchange=e=>{const f=e.target.files?.[0];if(f)identify(f,$('invStatus'),$('invQueue'))}}
 
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>{const id=b.dataset.close;$(id).classList.remove('open');if(id==='scannerModal'){stop(stream,camera);stream=null}if(id==='inventoryModal'){stop(invStream,$('invCamera'));invStream=null}});window.addEventListener('beforeunload',()=>{stop(stream,camera);stop(invStream,$('invCamera'))});
+const CV_LICENSE_NOTICE='Reconeixement visual integrat amb CollectorVision (AGPL-3.0), projecte de HanClinto.';console.info(CV_LICENSE_NOTICE);
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
 </script></body></html>

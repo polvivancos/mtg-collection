@@ -1,0 +1,7 @@
+CollectorVision integration
+
+This app integrates the CollectorVision card-identification project by HanClinto.
+Project source: https://github.com/HanClinto/CollectorVision
+License: AGPL-3.0
+
+The MTG Collection Pro scanner loads the official browser scanner assets and worker implementation, applies a small runtime integration patch for confidence-margin reporting, and uses Scryfall only for card metadata/printing enrichment after visual identification.
