@@ -139,6 +139,46 @@ const CV_WORKER_URL=CV_BASE+'scanner.worker.mjs';
 const CV_ORT_IMPORT=CV_BASE+'vendor/onnxruntime-web/ort.webgpu.min.mjs';
 let stream=null,currentPrinting=null,cvWorker=null,cvReady=null,cvInitPromise=null,cvRequest=null;
 const scanner=$('scannerModal'),camera=$('camera'),canvas=$('canvas');
+
+// Robust camera layer: deliberately independent from the visual recognition engine.
+// If the visual engine fails to load, the camera must keep working.
+async function startCam(video){
+  if(!video) throw new Error('Càmera no disponible');
+  if(!navigator.mediaDevices?.getUserMedia) throw new Error('Aquest navegador no permet accedir a la càmera');
+  stop(video.srcObject,video);
+  const constraintsList=[
+    {video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1440}},audio:false},
+    {video:{facingMode:'environment'},audio:false},
+    {video:true,audio:false}
+  ];
+  let lastErr=null;
+  for(const constraints of constraintsList){
+    try{
+      const s=await navigator.mediaDevices.getUserMedia(constraints);
+      video.muted=true; video.autoplay=true; video.playsInline=true;
+      video.srcObject=s;
+      await new Promise((resolve,reject)=>{
+        let done=false;
+        const finish=fn=>{if(done)return;done=true;video.removeEventListener('loadedmetadata',onMeta);video.removeEventListener('canplay',onCan);fn()};
+        const onMeta=()=>finish(resolve);
+        const onCan=()=>finish(resolve);
+        video.addEventListener('loadedmetadata',onMeta,{once:true});
+        video.addEventListener('canplay',onCan,{once:true});
+        setTimeout(()=>finish(()=>reject(new Error('La càmera no ha començat a reproduir'))),4000);
+      });
+      await video.play();
+      return s;
+    }catch(e){
+      lastErr=e;
+      stop(video.srcObject,video);
+    }
+  }
+  throw lastErr||new Error('No s’ha pogut obrir la càmera');
+}
+function stop(s,video){
+  try{s?.getTracks?.().forEach(t=>t.stop())}catch(_){}
+  if(video){try{video.pause()}catch(_){};try{video.srcObject=null}catch(_){}}
+}
 function cvIsIOS(){return /iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)}
 async function loadCollectorVision(){
   if(cvReady)return cvReady;
