@@ -1,4 +1,4 @@
-# MTG Collection v3 — Scanner local gratuït
+# MTG Collection v3.7 — Scanner local gratuït
 
 - No utilitza OpenAI, Gemini ni cap API d'IA de pagament.
 - La foto es processa localment al navegador amb Tesseract.js.
@@ -7,3 +7,5 @@
 - Si no pot, usa el nom com a fallback i mostra totes les impressions perquè l'usuari triï.
 - Requereix internet per consultar Scryfall i per descarregar Tesseract.js la primera vegada; els escanejos no s'envien a un servei d'IA.
 - Interfície adaptada a iPhone 14 Plus i altres pantalles mòbils amb safe-area.
+
+- En confirmar una impressió, es pot indicar directament el nombre de còpies que es tenen; el valor de mercat continua sent per còpia.
