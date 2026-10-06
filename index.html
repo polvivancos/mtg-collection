@@ -70,7 +70,7 @@
 </style>
 </head>
 <body><div class="app">
-<header class="top"><div class="topbar"><div class="brand"><div class="logo">MTG</div><div><div class="title">MTG Collection Pro</div><div class="sub">Inventari de col·leccionista · v3.13.4</div></div></div><div class="actions"><button id="scanBtn">📷 Escanejar</button><button id="inventoryBtn">⚡ Inventari</button><button id="manageTopBtn">🛠 Gestionar cartes</button><button id="cloudBtn">☁️ Núvol</button><button id="exportBtn">Exporta</button><button class="primary" id="addBtn">+ Afegir</button></div></div></header>
+<header class="top"><div class="topbar"><div class="brand"><div class="logo">MTG</div><div><div class="title">MTG Collection Pro</div><div class="sub">Inventari de col·leccionista · v3.13.5</div></div></div><div class="actions"><button id="scanBtn">📷 Escanejar</button><button id="inventoryBtn">⚡ Inventari</button><button id="manageTopBtn">🛠 Gestionar cartes</button><button id="cloudBtn">☁️ Núvol</button><button id="exportBtn">Exporta</button><button class="primary" id="addBtn">+ Afegir</button></div></div></header>
 <main class="wrap">
 <nav class="tabs"><button class="tab active" data-tab="collection">📚 Col·lecció</button><button class="tab manage-tab" data-tab="manage">🛠 Gestionar cartes</button><button class="tab" data-tab="dashboard">📊 Dashboard</button><button class="tab" data-tab="sets">📦 Sets</button><button class="tab" data-tab="backup">☁️ Dades i núvol</button></nav>
 <section id="collectionTab">
@@ -201,14 +201,14 @@ async function loadCollectorVision(){
   if(cvInitPromise)return cvInitPromise;
   cvInitPromise=(async()=>{
     $('scanStatus').textContent='🧠 Carregant el motor visual MTG…';
-    const mr=await fetch(CV_ASSETS+'/manifest.json?v=cv3134',{cache:'no-store'});
+    const mr=await fetch(CV_ASSETS+'/manifest.json?v=cv3135',{cache:'no-store'});
     if(!mr.ok)throw new Error(`No puc carregar el catàleg visual (HTTP ${mr.status})`);
     const manifest=await mr.json();
 
     // IMPORTANT: run the official worker directly from its hosted origin.
     // Do not turn it into a Blob worker: its module imports and asset paths are
     // relative to the CollectorVision deployment and must resolve there.
-    cvWorker=new Worker(CV_WORKER_URL+'?v=cv3134',{type:'module'});
+    cvWorker=new Worker(CV_WORKER_URL+'?v=cv3135',{type:'module'});
     cvReady=new Promise((resolve,reject)=>{
       let settled=false;
       const fail=(err)=>{
@@ -235,7 +235,7 @@ async function loadCollectorVision(){
       cvWorker.addEventListener('message',onMessage);
       cvWorker.addEventListener('error',e=>fail(new Error(e.message||'El worker visual no s’ha pogut iniciar')),{once:true});
       cvWorker.addEventListener('messageerror',()=>fail(new Error('Error de comunicació amb el worker visual')),{once:true});
-      cvWorker.postMessage({type:'init',manifest,assetBasePath:CV_ASSETS,enableWebGpu:false,catalogLimit:null,rotationInvariant:true,minCornerConfidence:.02,catalogMode:'v1'});
+      cvWorker.postMessage({type:'init',manifest,assetBasePath:CV_ASSETS,enableWebGpu:false,catalogLimit:null,rotationInvariant:true,minCornerConfidence:.02});
     });
     await cvReady;
     $('scanStatus').textContent='✓ Motor visual preparat. Apunta a una carta i captura.';
