@@ -131,6 +131,59 @@ function autoRefreshMarketPrices(){const last=localStorage.getItem('mtgPricesLas
 $('refreshPricesBtn')&&($('refreshPricesBtn').onclick=()=>refreshMarketPrices({silent:false}));$('cloudBtn').onclick=async()=>{await initCloud();const cfg=getCloudConfig();if(cfg){$('supabaseUrl').value=cfg.url||'';$('supabaseKey').value=cfg.key||''}updateCloudState();$('cloudModal').classList.add('open')};$('cloudSettings').onclick=()=>{$('cloudBtn').click()};$('cloudLogin').onclick=loginCloud;$('cloudSignup').onclick=signupCloud;$('cloudSync').onclick=()=>mergeCloud(true);$('cloudLogout').onclick=logoutCloud;
 initCloud();
 
+// Robust camera lifecycle for iPhone/Safari.
+let activeCameraStreams=new WeakMap();
+async function startCam(video){
+  if(!video) throw new Error('Element de càmera no disponible');
+  stop(activeCameraStreams.get(video),video);
+  if(!window.isSecureContext) throw new Error('La càmera necessita HTTPS');
+  if(!navigator.mediaDevices?.getUserMedia) throw new Error('Aquest navegador no permet accés a la càmera');
+  video.setAttribute('autoplay','');
+  video.setAttribute('playsinline','');
+  video.setAttribute('muted','');
+  video.muted=true;
+  const attempts=[
+    {video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false},
+    {video:{facingMode:'environment'},audio:false},
+    {video:true,audio:false}
+  ];
+  let lastErr=null;
+  for(const constraints of attempts){
+    try{
+      const s=await navigator.mediaDevices.getUserMedia(constraints);
+      const track=s.getVideoTracks?.()[0];
+      if(!track || track.readyState==='ended'){s.getTracks().forEach(t=>t.stop());throw new Error('La càmera no ha retornat cap pista de vídeo');}
+      video.srcObject=s;
+      activeCameraStreams.set(video,s);
+      await new Promise((resolve,reject)=>{
+        let done=false;
+        const finish=()=>{if(done)return;done=true;cleanup();resolve()};
+        const fail=e=>{if(done)return;done=true;cleanup();reject(e)};
+        const cleanup=()=>{video.removeEventListener('loadedmetadata',finish);video.removeEventListener('canplay',finish);video.removeEventListener('playing',finish)};
+        video.addEventListener('loadedmetadata',finish,{once:true});
+        video.addEventListener('canplay',finish,{once:true});
+        video.addEventListener('playing',finish,{once:true});
+        setTimeout(()=>video.readyState>=2?finish():fail(new Error('La càmera no ha començat a reproduir')),3500);
+      });
+      try{await video.play()}catch(e){if(video.paused)throw new Error('Safari no ha pogut iniciar el vídeo de la càmera')}
+      await new Promise(r=>setTimeout(r,120));
+      if(video.readyState<2 || !video.videoWidth) throw new Error('Flux de vídeo sense imatge');
+      return s;
+    }catch(e){
+      lastErr=e;
+      const s=video.srcObject;
+      if(s?.getTracks)s.getTracks().forEach(t=>t.stop());
+      video.srcObject=null;
+    }
+  }
+  throw lastErr||new Error('No s’ha pogut obrir la càmera');
+}
+function stop(s,video){
+  const stream=s||video?.srcObject;
+  if(stream?.getTracks)stream.getTracks().forEach(t=>t.stop());
+  if(video){try{video.pause()}catch(e){};video.srcObject=null;activeCameraStreams.delete(video)}
+}
+
 // CollectorVision scanner: real visual card detection + full MTG catalog.
 // The engine is loaded only when the scanner is opened; inference runs locally.
 const CV_BASE='https://hanclinto.github.io/CollectorVision/';
@@ -139,46 +192,6 @@ const CV_WORKER_URL=CV_BASE+'scanner.worker.mjs';
 const CV_ORT_IMPORT=CV_BASE+'vendor/onnxruntime-web/ort.webgpu.min.mjs';
 let stream=null,currentPrinting=null,cvWorker=null,cvReady=null,cvInitPromise=null,cvRequest=null;
 const scanner=$('scannerModal'),camera=$('camera'),canvas=$('canvas');
-
-// Robust camera layer: deliberately independent from the visual recognition engine.
-// If the visual engine fails to load, the camera must keep working.
-async function startCam(video){
-  if(!video) throw new Error('Càmera no disponible');
-  if(!navigator.mediaDevices?.getUserMedia) throw new Error('Aquest navegador no permet accedir a la càmera');
-  stop(video.srcObject,video);
-  const constraintsList=[
-    {video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1440}},audio:false},
-    {video:{facingMode:'environment'},audio:false},
-    {video:true,audio:false}
-  ];
-  let lastErr=null;
-  for(const constraints of constraintsList){
-    try{
-      const s=await navigator.mediaDevices.getUserMedia(constraints);
-      video.muted=true; video.autoplay=true; video.playsInline=true;
-      video.srcObject=s;
-      await new Promise((resolve,reject)=>{
-        let done=false;
-        const finish=fn=>{if(done)return;done=true;video.removeEventListener('loadedmetadata',onMeta);video.removeEventListener('canplay',onCan);fn()};
-        const onMeta=()=>finish(resolve);
-        const onCan=()=>finish(resolve);
-        video.addEventListener('loadedmetadata',onMeta,{once:true});
-        video.addEventListener('canplay',onCan,{once:true});
-        setTimeout(()=>finish(()=>reject(new Error('La càmera no ha començat a reproduir'))),4000);
-      });
-      await video.play();
-      return s;
-    }catch(e){
-      lastErr=e;
-      stop(video.srcObject,video);
-    }
-  }
-  throw lastErr||new Error('No s’ha pogut obrir la càmera');
-}
-function stop(s,video){
-  try{s?.getTracks?.().forEach(t=>t.stop())}catch(_){}
-  if(video){try{video.pause()}catch(_){};try{video.srcObject=null}catch(_){}}
-}
 function cvIsIOS(){return /iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)}
 async function loadCollectorVision(){
   if(cvReady)return cvReady;
