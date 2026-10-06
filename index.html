@@ -70,7 +70,7 @@
 </style>
 </head>
 <body><div class="app">
-<header class="top"><div class="topbar"><div class="brand"><div class="logo">MTG</div><div><div class="title">MTG Collection Pro</div><div class="sub">Inventari de col·leccionista · v3.13.3</div></div></div><div class="actions"><button id="scanBtn">📷 Escanejar</button><button id="inventoryBtn">⚡ Inventari</button><button id="manageTopBtn">🛠 Gestionar cartes</button><button id="cloudBtn">☁️ Núvol</button><button id="exportBtn">Exporta</button><button class="primary" id="addBtn">+ Afegir</button></div></div></header>
+<header class="top"><div class="topbar"><div class="brand"><div class="logo">MTG</div><div><div class="title">MTG Collection Pro</div><div class="sub">Inventari de col·leccionista · v3.13.4</div></div></div><div class="actions"><button id="scanBtn">📷 Escanejar</button><button id="inventoryBtn">⚡ Inventari</button><button id="manageTopBtn">🛠 Gestionar cartes</button><button id="cloudBtn">☁️ Núvol</button><button id="exportBtn">Exporta</button><button class="primary" id="addBtn">+ Afegir</button></div></div></header>
 <main class="wrap">
 <nav class="tabs"><button class="tab active" data-tab="collection">📚 Col·lecció</button><button class="tab manage-tab" data-tab="manage">🛠 Gestionar cartes</button><button class="tab" data-tab="dashboard">📊 Dashboard</button><button class="tab" data-tab="sets">📦 Sets</button><button class="tab" data-tab="backup">☁️ Dades i núvol</button></nav>
 <section id="collectionTab">
@@ -96,6 +96,9 @@
 <div class="modal" id="cloudModal"><div class="dialog small"><div class="dialoghead"><div><h2>☁️ Núvol i sincronització</h2><div class="sub">Supabase + autenticació. Les dades de la col·lecció queden protegides per usuari.</div></div><button data-close="cloudModal">Tanca</button></div><div class="form"><label class="wide">Supabase Project URL<input id="supabaseUrl" placeholder="https://xxxx.supabase.co"></label><label class="wide">Supabase Publishable Key<input id="supabaseKey" placeholder="sb_publishable_..." type="password"></label><label>Email<input id="cloudEmail" type="email" autocomplete="email"></label><label>Contrasenya<input id="cloudPassword" type="password" autocomplete="current-password"></label></div><div class="dialogactions"><button id="cloudSignup">Crear compte</button><button id="cloudLogin" class="primary">Iniciar sessió</button></div><div class="hint">Necessites crear el projecte Supabase i executar el fitxer <b>supabase_schema.sql</b> que incloc amb aquesta versió.</div><div id="cloudMessage" class="status"></div></div></div>
 <script>
 const $=id=>document.getElementById(id);const KEY='mtgCollectionProV2';
+// Cloud state must exist before the initial collection save/ID migration runs.
+const CLOUD_KEY='mtgCloudConfigV1', CLOUD_READY='mtgCloudReadyV1';
+let supabase=null, cloudUser=null, syncTimer=null, cloudBusy=false;
 const seed=[{name:'Lightning Bolt',set:'M10',num:'146',color:'Vermell',mana:'R',rarity:'common',qty:4,foil:false,lang:'English',condition:'NM',purchase:0,value:0,location:'',notes:'',added:'2026-10-01',scryfallId:'',image:''},{name:'Sol Ring',set:'CMM',num:'396',color:'Incolor',mana:'1',rarity:'uncommon',qty:2,foil:false,lang:'English',condition:'NM',purchase:0,value:0,location:'',notes:'',added:'2026-09-30',scryfallId:'',image:''}];
 let cards=[];try{cards=JSON.parse(localStorage.getItem(KEY)||'null')||seed}catch(e){cards=seed}function save(){localStorage.setItem(KEY,JSON.stringify(cards));scheduleCloudSync()}function money(n){return (Number(n)||0).toLocaleString('ca-ES',{style:'currency',currency:'EUR'})}function toast(s){$('toast').textContent=s;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2200)}
 function stats(){const total=cards.reduce((a,c)=>a+(+c.qty||0),0);$('totalQty').textContent=total;$('uniqueQty').textContent=cards.length;$('setQty').textContent=new Set(cards.map(c=>c.set)).size;$('foilQty').textContent=cards.filter(c=>c.foil).reduce((a,c)=>a+(+c.qty||0),0);$('valueQty').textContent=money(cards.reduce((a,c)=>a+(+c.value||0)*(+c.qty||0),0));const sets=[...new Set(cards.map(c=>c.set))].sort();$('set').innerHTML='<option value="">Tots els sets</option>'+sets.map(x=>`<option>${esc(x)}</option>`).join('')}
@@ -112,7 +115,7 @@ function showTab(tab){document.querySelectorAll('.tab').forEach(x=>x.classList.t
 function exportJSON(){const blob=new Blob([JSON.stringify({version:2,exportedAt:new Date().toISOString(),cards},null,2)],{type:'application/json'});download(blob,'mtg-collection-v2.json')};function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}$('exportCsv').onclick=()=>{const cols=['name','set','num','color','mana','rarity','qty','foil','lang','condition','purchase','value','location','notes','added'];const rows=[cols,...cards.map(c=>cols.map(k=>`"${String(c[k]??'').replaceAll('"','""')}"`))];download(new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv;charset=utf-8'}),'mtg-collection.csv')};$('importBtn').onclick=()=>$('importFile').click();$('importFile').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{const data=JSON.parse(await f.text());const incoming=Array.isArray(data)?data:data.cards;if(!Array.isArray(incoming))throw 0;cards=incoming.map(c=>({...c,id:c.id||String(Date.now()+Math.random())}));save();render();toast(`${cards.length} registres importats`)}catch(err){toast('Fitxer JSON no vàlid')}};
 
 // Cloud sync (Supabase)
-const CLOUD_KEY='mtgCloudConfigV1', CLOUD_READY='mtgCloudReadyV1'; let supabase=null, cloudUser=null, syncTimer=null, cloudBusy=false;
+
 function getCloudConfig(){try{return JSON.parse(localStorage.getItem(CLOUD_KEY)||'null')}catch{return null}}
 function setCloudMessage(t){const el=$('cloudMessage');if(el)el.textContent=t||''}
 function updateCloudState(){const el=$('cloudState');if(!el)return;if(!supabase){el.textContent='No connectat. Configura Supabase per activar la sincronització.';return}el.textContent=cloudUser?`Connectat com ${cloudUser.email}. La col·lecció es pot sincronitzar entre dispositius.`:'Supabase configurat, però no hi ha cap sessió iniciada.'}
@@ -198,14 +201,14 @@ async function loadCollectorVision(){
   if(cvInitPromise)return cvInitPromise;
   cvInitPromise=(async()=>{
     $('scanStatus').textContent='🧠 Carregant el motor visual MTG…';
-    const mr=await fetch(CV_ASSETS+'/manifest.json?v=cv3133',{cache:'no-store'});
+    const mr=await fetch(CV_ASSETS+'/manifest.json?v=cv3134',{cache:'no-store'});
     if(!mr.ok)throw new Error(`No puc carregar el catàleg visual (HTTP ${mr.status})`);
     const manifest=await mr.json();
 
     // IMPORTANT: run the official worker directly from its hosted origin.
     // Do not turn it into a Blob worker: its module imports and asset paths are
     // relative to the CollectorVision deployment and must resolve there.
-    cvWorker=new Worker(CV_WORKER_URL+'?v=cv3133',{type:'module'});
+    cvWorker=new Worker(CV_WORKER_URL+'?v=cv3134',{type:'module'});
     cvReady=new Promise((resolve,reject)=>{
       let settled=false;
       const fail=(err)=>{
