@@ -70,7 +70,7 @@
 </style>
 </head>
 <body><div class="app">
-<header class="top"><div class="topbar"><div class="brand"><div class="logo">MTG</div><div><div class="title">MTG Collection Pro</div><div class="sub">Inventari de col·leccionista · v3.13</div></div></div><div class="actions"><button id="scanBtn">📷 Escanejar</button><button id="inventoryBtn">⚡ Inventari</button><button id="manageTopBtn">🛠 Gestionar cartes</button><button id="cloudBtn">☁️ Núvol</button><button id="exportBtn">Exporta</button><button class="primary" id="addBtn">+ Afegir</button></div></div></header>
+<header class="top"><div class="topbar"><div class="brand"><div class="logo">MTG</div><div><div class="title">MTG Collection Pro</div><div class="sub">Inventari de col·leccionista · v3.13.3</div></div></div><div class="actions"><button id="scanBtn">📷 Escanejar</button><button id="inventoryBtn">⚡ Inventari</button><button id="manageTopBtn">🛠 Gestionar cartes</button><button id="cloudBtn">☁️ Núvol</button><button id="exportBtn">Exporta</button><button class="primary" id="addBtn">+ Afegir</button></div></div></header>
 <main class="wrap">
 <nav class="tabs"><button class="tab active" data-tab="collection">📚 Col·lecció</button><button class="tab manage-tab" data-tab="manage">🛠 Gestionar cartes</button><button class="tab" data-tab="dashboard">📊 Dashboard</button><button class="tab" data-tab="sets">📦 Sets</button><button class="tab" data-tab="backup">☁️ Dades i núvol</button></nav>
 <section id="collectionTab">
@@ -198,65 +198,22 @@ async function loadCollectorVision(){
   if(cvInitPromise)return cvInitPromise;
   cvInitPromise=(async()=>{
     $('scanStatus').textContent='🧠 Carregant el motor visual MTG…';
-    const mr=await fetch(CV_ASSETS+'/manifest.json',{cache:'no-store'});
-    if(!mr.ok)throw new Error('No puc carregar el catàleg visual');
+    const mr=await fetch(CV_ASSETS+'/manifest.json?v=cv3133',{cache:'no-store'});
+    if(!mr.ok)throw new Error(`No puc carregar el catàleg visual (HTTP ${mr.status})`);
     const manifest=await mr.json();
-    const wr=await fetch(CV_WORKER_URL,{cache:'no-store'});
-    if(!wr.ok)throw new Error('No puc carregar el motor visual');
-    let source=await wr.text();
-    source=source.replace(/from "\.\/vendor\/onnxruntime-web\/ort\.webgpu\.min\.mjs\?v=__BUILD_ID__"/,`from "${CV_ORT_IMPORT}"`);
-    // The worker is executed from a Blob URL, so every relative import inside it
-    // must be absolute. We use the bundled v1 MTG catalog and expose the runner's
-    // second-best score as an explicit confidence margin.
-    source=source.replace(/new URL\("\.\/lib\/collectorvision-catalog-v2\.mjs", import\.meta\.url\)/g,`new URL("${CV_BASE}lib/collectorvision-catalog-v2.mjs")`);
-    source=source.replace(/  search\(query\) \{[\s\S]*?\n  \}\n\}/,`  search(query) {
-    const dims = this.catalogDims ?? this.manifest.catalog.dims;
-    const rows = this.catalogRows ?? this.manifest.catalog.rows;
-    let bestScore = -Infinity;
-    let secondScore = -Infinity;
-    let bestIndex = -1;
-    let secondIndex = -1;
-    for (let row = 0; row < rows; row += 1) {
-      const offset = row * dims;
-      let score = 0;
-      for (let col = 0; col < dims; col += 1) {
-        score += FLOAT16_LOOKUP[this.embeddings[offset + col]] * query[col];
-      }
-      if (score > bestScore) {
-        secondScore = bestScore;
-        secondIndex = bestIndex;
-        bestScore = score;
-        bestIndex = row;
-      } else if (score > secondScore) {
-        secondScore = score;
-        secondIndex = row;
-      }
-    }
-    const secondaryId = this.secondaryIds?.[bestIndex] ?? null;
-    const best = {
-      score: bestScore,
-      secondScore,
-      scoreMargin: bestScore - secondScore,
-      cardId: this.cardIds[bestIndex],
-      secondCardId: secondIndex >= 0 ? this.cardIds[secondIndex] : null,
-      cardName: this.cardNames?.[bestIndex] ?? null,
-      secondaryId,
-      secondaryIdField: this.secondaryIdField,
-    };
-    if (this.secondaryIdField && secondaryId !== null && secondaryId !== undefined) {
-      best[this.secondaryIdField] = secondaryId;
-    }
-    return best;
-  }
-}`);
-    source=source.replace(/score: best\.score,\n    orientation:/,`score: best.score,
-    secondScore: best.secondScore,
-    scoreMargin: best.scoreMargin,
-    secondCardId: best.secondCardId,
-    orientation:`);
-    const blob=new Blob([source],{type:'text/javascript'});
-    cvWorker=new Worker(URL.createObjectURL(blob),{type:'module'});
+
+    // IMPORTANT: run the official worker directly from its hosted origin.
+    // Do not turn it into a Blob worker: its module imports and asset paths are
+    // relative to the CollectorVision deployment and must resolve there.
+    cvWorker=new Worker(CV_WORKER_URL+'?v=cv3133',{type:'module'});
     cvReady=new Promise((resolve,reject)=>{
+      let settled=false;
+      const fail=(err)=>{
+        if(settled)return;
+        settled=true;
+        cvWorker.removeEventListener('message',onMessage);
+        reject(err instanceof Error?err:new Error(String(err)));
+      };
       const onMessage=({data})=>{
         if(data.type==='progress'){
           if(data.stage==='detector')$('scanStatus').textContent=`🧠 Preparant detector visual · ${Math.round((data.ratio||0)*100)}%`;
@@ -265,17 +222,17 @@ async function loadCollectorVision(){
           return;
         }
         if(data.type==='ready'){
+          settled=true;
           cvWorker.removeEventListener('message',onMessage);
           resolve({manifest,rows:data.catalogRows||manifest.catalog?.rows||0});
           return;
         }
-        if(data.type==='error'){
-          cvWorker.removeEventListener('message',onMessage);reject(new Error(data.message||'Error del motor visual'));
-        }
+        if(data.type==='error')fail(new Error(data.message||'Error del motor visual'));
       };
       cvWorker.addEventListener('message',onMessage);
-      cvWorker.addEventListener('error',e=>reject(new Error(e.message||'Error del worker visual')),{once:true});
-      cvWorker.postMessage({type:'init',manifest,assetBasePath:CV_ASSETS,enableWebGpu:false,catalogLimit:null,rotationInvariant:true,minCornerConfidence:.04,catalogMode:'v1'});
+      cvWorker.addEventListener('error',e=>fail(new Error(e.message||'El worker visual no s’ha pogut iniciar')),{once:true});
+      cvWorker.addEventListener('messageerror',()=>fail(new Error('Error de comunicació amb el worker visual')),{once:true});
+      cvWorker.postMessage({type:'init',manifest,assetBasePath:CV_ASSETS,enableWebGpu:false,catalogLimit:null,rotationInvariant:true,minCornerConfidence:.02,catalogMode:'v1'});
     });
     await cvReady;
     $('scanStatus').textContent='✓ Motor visual preparat. Apunta a una carta i captura.';
@@ -350,26 +307,27 @@ async function identify(blob,statusEl,resultsEl){
     const ranked=[...groups.values()].sort((a,b)=>(b.count-a.count)||(b.max-a.max));
     const best=ranked[0];
     const avg=best.scores.reduce((a,b)=>a+b,0)/best.scores.length;
-    const margin=best.margins.length?Math.min(...best.margins):0;
+    const margin=best.margins.length?Math.min(...best.margins):null;
 
-    // Conservative acceptance policy:
-    // - live camera: at least 2 agreeing frames, average >= .70 and margin >= .04
-    // - gallery: one clean frame, score >= .82 and margin >= .06
+    // CollectorVision's official worker returns the best score but not a
+    // second-best margin. Therefore never fabricate a margin. Use repeated
+    // agreement between frames as the confidence gate on live camera, and a
+    // high absolute score for a single gallery image.
     const accepted=isLiveCapture
-      ? best.count>=2 && avg>=0.70 && margin>=0.04
-      : best.max>=0.82 && margin>=0.06;
+      ? best.count>=2 && avg>=0.78
+      : best.max>=0.84;
 
     if(!accepted){
       const reason=isLiveCapture
-        ? `Només ${best.count}/${frameCount} frames coincideixen (mitjana ${Math.round(avg*100)}%, marge ${Math.round(margin*100)}%).`
-        : `La millor coincidència és ${Math.round(best.max*100)}% i el marge respecte de la segona candidata és ${Math.round(margin*100)}%.`;
+        ? `Només ${best.count}/${frameCount} frames coincideixen (mitjana ${Math.round(avg*100)}%).`
+        : `La millor coincidència visual és ${Math.round(best.max*100)}%.`;
       statusEl.textContent='⚠️ No tinc prou confiança.';
       resultsEl.innerHTML=`<div class="hint"><b>No vull inventar-me la carta.</b><br>${esc(reason)}<br><br>Acosta la carta, centra-la completament, evita reflexos i intenta que ocupi bona part de la pantalla.</div><div class="toolbar" style="margin-top:8px"><button id="scanRetryBtn" class="primary">↻ Tornar a provar</button></div>`;
       const retry=$('scanRetryBtn');if(retry)retry.onclick=()=>{sc?.classList.remove('has-results');resultsEl.innerHTML='';statusEl.textContent='Centra la carta sencera dins del marc.'};
       return;
     }
 
-    statusEl.textContent=`🎯 Carta identificada · ${Math.round(avg*100)}% · marge ${Math.round(margin*100)}%`;
+    statusEl.textContent=`🎯 Carta identificada · ${Math.round(avg*100)}%`;
     const r=await fetch('https://api.scryfall.com/cards/'+encodeURIComponent(best.id),{headers:{Accept:'application/json'}});
     if(!r.ok)throw new Error('No he pogut obtenir les dades de Scryfall');
     const c=await r.json();
