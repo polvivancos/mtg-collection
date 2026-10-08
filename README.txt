@@ -1,7 +1,5 @@
-MTG Collection v3.13.8 — diagnòstic de connexió Supabase
+MTG Collection v3.13.10
 
-Aquest paquet afegeix missatges d'error concrets quan Supabase no s'inicialitza i normalitza la Project URL eliminant /rest/v1.
+Aquesta versió fa que el mode lleuger d’iPhone mostri automàticament totes les impressions de Scryfall després de trobar una carta pel nom, sense haver de prémer un segon botó.
 
-Per publicar: substitueix index.html, manifest.json i service-worker.js al repositori GitHub Pages. No comparteixis mai la secret/service_role key; fes servir la publishable key.
-
-Aquesta versió no puja cartes automàticament fins que l'usuari inicia sessió i prem sincronitzar.
+Publicació: substitueix index.html, manifest.json i service-worker.js a l’arrel del repositori GitHub Pages.
