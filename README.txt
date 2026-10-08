@@ -1,4 +1,4 @@
-MTG Collection v3.13.7 — diagnòstic de connexió Supabase
+MTG Collection v3.13.8 — diagnòstic de connexió Supabase
 
 Aquest paquet afegeix missatges d'error concrets quan Supabase no s'inicialitza i normalitza la Project URL eliminant /rest/v1.
 
