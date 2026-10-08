@@ -1,5 +1,5 @@
-MTG Collection v3.13.10
+MTG Collection Pro v3.13.11
 
-Aquesta versió fa que el mode lleuger d’iPhone mostri automàticament totes les impressions de Scryfall després de trobar una carta pel nom, sense haver de prémer un segon botó.
+Corregeix la vista mòbil de les impressions: en acabar la cerca, el modal passa a mode resultats i mostra la llista seleccionable.
 
-Publicació: substitueix index.html, manifest.json i service-worker.js a l’arrel del repositori GitHub Pages.
+Substitueix index.html, manifest.json i service-worker.js a l’arrel del repositori GitHub Pages. Mantén la mateixa configuració Supabase i fes una còpia JSON de seguretat de la col·lecció.
